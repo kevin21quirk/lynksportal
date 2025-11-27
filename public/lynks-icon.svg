@@ -1,0 +1,13 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Circle at top -->
+  <circle cx="100" cy="30" r="20" fill="#dbf72c"/>
+  
+  <!-- Left loop -->
+  <path d="M 40 80 C 20 100 20 130 40 150 C 60 170 90 170 110 150 L 90 130 C 80 140 65 140 55 130 C 45 120 45 110 55 100 L 75 80 Z" fill="#dbf72c"/>
+  
+  <!-- Right loop -->
+  <path d="M 160 80 C 180 100 180 130 160 150 C 140 170 110 170 90 150 L 110 130 C 120 140 135 140 145 130 C 155 120 155 110 145 100 L 125 80 Z" fill="#dbf72c"/>
+  
+  <!-- Center bar -->
+  <rect x="60" y="95" width="80" height="25" rx="3" fill="#dbf72c" transform="rotate(-35 100 107.5)"/>
+</svg>
