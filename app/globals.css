@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+/* Custom Fonts */
+@font-face {
+  font-family: 'Noir Pro';
+  src: url('/NoirPro-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Noir Pro';
+  src: url('/NoirPro-SemiBold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Noir Pro', Arial, Helvetica, sans-serif;
+  font-weight: 400;
+}
+
+/* Apply SemiBold to all headings and titles */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Noir Pro', Arial, Helvetica, sans-serif;
+  font-weight: 600 !important;
+}
+
+/* Buttons with medium weight */
+button, a.rounded-full {
+  font-weight: 500 !important;
+}
+
+/* Custom pulsating animation for Login/Signup button */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(219, 247, 44, 0.7);
+  }
+  50% {
+    opacity: 0.9;
+    box-shadow: 0 0 20px 5px rgba(219, 247, 44, 0.4);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
