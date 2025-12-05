@@ -122,6 +122,87 @@ export function initDatabase() {
     )
   `);
 
+  // Analytics Events table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS analytics_events (
+      id TEXT PRIMARY KEY,
+      event TEXT NOT NULL,
+      session_id TEXT NOT NULL,
+      user_id TEXT,
+      url TEXT NOT NULL,
+      pathname TEXT NOT NULL,
+      referrer TEXT,
+      user_agent TEXT,
+      ip_address TEXT,
+      region TEXT,
+      country TEXT,
+      city TEXT,
+      latitude REAL,
+      longitude REAL,
+      device_type TEXT,
+      browser TEXT,
+      screen_width INTEGER,
+      screen_height INTEGER,
+      metadata TEXT,
+      timestamp DATETIME NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Create indexes for analytics queries
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_events_session ON analytics_events(session_id);
+    CREATE INDEX IF NOT EXISTS idx_events_user ON analytics_events(user_id);
+    CREATE INDEX IF NOT EXISTS idx_events_event ON analytics_events(event);
+    CREATE INDEX IF NOT EXISTS idx_events_timestamp ON analytics_events(timestamp);
+    CREATE INDEX IF NOT EXISTS idx_events_pathname ON analytics_events(pathname);
+  `);
+
+  // Business Analytics Aggregated table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS business_analytics (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      business_id INTEGER NOT NULL,
+      date DATE NOT NULL,
+      views INTEGER DEFAULT 0,
+      unique_visitors INTEGER DEFAULT 0,
+      calls INTEGER DEFAULT 0,
+      emails INTEGER DEFAULT 0,
+      whatsapp INTEGER DEFAULT 0,
+      website_clicks INTEGER DEFAULT 0,
+      avg_time_on_page REAL DEFAULT 0,
+      total_time_on_page INTEGER DEFAULT 0,
+      scroll_depth_avg REAL DEFAULT 0,
+      top_hours TEXT,
+      device_breakdown TEXT,
+      region_breakdown TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE,
+      UNIQUE(business_id, date)
+    )
+  `);
+
+  // Platform Analytics table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS platform_analytics (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date DATE NOT NULL UNIQUE,
+      total_visitors INTEGER DEFAULT 0,
+      unique_visitors INTEGER DEFAULT 0,
+      page_views INTEGER DEFAULT 0,
+      active_sessions INTEGER DEFAULT 0,
+      top_businesses TEXT,
+      top_categories TEXT,
+      device_breakdown TEXT,
+      browser_breakdown TEXT,
+      region_breakdown TEXT,
+      peak_hours TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Seed initial categories
   const categoryCount = db.prepare('SELECT COUNT(*) as count FROM categories').get() as { count: number };
   

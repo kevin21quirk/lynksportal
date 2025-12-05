@@ -13,6 +13,7 @@ function slugify(text: string): string {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
     const userId = searchParams.get('userId');
     const slug = searchParams.get('slug');
     const category = searchParams.get('category');
@@ -31,6 +32,11 @@ export async function GET(request: NextRequest) {
       WHERE 1=1
     `;
     const params: any[] = [];
+
+    if (id) {
+      query += ' AND b.id = ?';
+      params.push(id);
+    }
 
     if (userId) {
       query += ' AND b.user_id = ?';
