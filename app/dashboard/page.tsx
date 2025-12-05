@@ -14,7 +14,8 @@ import {
   Settings,
   LogOut,
   Globe,
-  Share2
+  Share2,
+  BarChart3
 } from 'lucide-react';
 
 interface User {
@@ -240,6 +241,14 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
+                    <Link
+                      href={`/dashboard/analytics/${business.id}`}
+                      className="flex-1 flex items-center justify-center space-x-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-bold"
+                      title="View Analytics"
+                    >
+                      <BarChart3 size={16} />
+                      <span>Analytics</span>
+                    </Link>
                     <Link
                       href={`/dashboard/edit/${business.id}`}
                       className="flex-1 flex items-center justify-center space-x-1 text-black px-4 py-2 rounded-lg transition-colors text-sm font-bold"
