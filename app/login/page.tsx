@@ -39,8 +39,12 @@ export default function LoginPage() {
       // Store user data
       localStorage.setItem('user', JSON.stringify(data.user));
       
-      // Redirect to dashboard
-      router.push('/dashboard');
+      // Redirect based on user role
+      if (data.user.email === 'admin@lynksportal.com') {
+        router.push('/admin/dashboard');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
