@@ -107,22 +107,7 @@ export default function Home() {
             </Link>
             </FadeInSection>
             
-            {/* Navigation and Join Button */}
-            <FadeInSection delay={100}>
-            <div className="flex items-center gap-8">
-              <Link href="/" className="text-white text-lg hover:text-lime-400 transition-colors">
-                Homepage
-              </Link>
-              <Link 
-                href="/login" 
-                className="px-6 py-2 rounded-full text-lg transition-all hover:scale-105 flex items-center gap-2"
-                style={{ backgroundColor: '#dbf72c', color: '#000' }}
-              >
-                <FontAwesomeIcon icon={faArrowRight} className="text-lg" />
-                JOIN LYNKS
-              </Link>
-            </div>
-            </FadeInSection>
+            {/* Navigation removed */}
           </div>
         </div>
         
@@ -154,26 +139,6 @@ export default function Home() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-4 py-3 bg-white border-0 rounded-lg text-black placeholder-gray-500 text-lg focus:ring-2 focus:ring-lime-400 outline-none mb-3"
               />
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {/* Apply filter logic if needed */}}
-                  className="flex-1 px-6 py-3 rounded-full text-lg transition-all hover:scale-105"
-                  style={{ backgroundColor: '#dbf72c', color: '#000' }}
-                >
-                  Apply Search
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedCategory('');
-                    setSelectedBusinessType('');
-                    setSearchQuery('');
-                  }}
-                  className="flex-1 px-6 py-3 rounded-full text-lg transition-all hover:scale-105 border-2"
-                  style={{ borderColor: '#dbf72c', color: '#dbf72c', backgroundColor: 'transparent' }}
-                >
-                  Clear Search
-                </button>
-              </div>
               </div>
             </FadeInSection>
 

@@ -63,14 +63,19 @@ export default function EditBusinessPage() {
     businessTypeId: '',
     phone: '',
     email: '',
+    whatsappNumber: '',
+    messengerUrl: '',
     address: '',
     city: '',
     postcode: '',
     websiteUrl: '',
     logoUrl: '',
+    heroImageUrl: '',
     coverImageUrl: '',
-    primaryColor: '#dbf72c',
-    secondaryColor: '#000000'
+    primaryColor: '#BF360C',
+    secondaryColor: '#000000',
+    containerBackgroundColor: '#FF8A65',
+    cardBackgroundColor: '#FFFFFF'
   });
 
   const [aiScanning, setAiScanning] = useState(false);
@@ -89,6 +94,16 @@ export default function EditBusinessPage() {
     { day: 'Saturday', open: '10:00', close: '16:00', closed: false },
     { day: 'Sunday', open: '', close: '', closed: true }
   ]);
+  
+  // Phase 2 sections
+  const [ctaHeading, setCtaHeading] = useState('');
+  const [ctaButtonText, setCtaButtonText] = useState('');
+  const [ctaButtonUrl, setCtaButtonUrl] = useState('');
+  const [policies, setPolicies] = useState<{title: string, url: string}[]>([]);
+  const [mapEmbedUrl, setMapEmbedUrl] = useState('');
+  const [showCta, setShowCta] = useState(false);
+  const [showPolicies, setShowPolicies] = useState(false);
+  const [showMap, setShowMap] = useState(true);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -128,14 +143,19 @@ export default function EditBusinessPage() {
           businessTypeId: business.business_type_id?.toString() || '',
           phone: business.phone || '',
           email: business.email || '',
+          whatsappNumber: business.whatsapp_number || '',
+          messengerUrl: business.messenger_url || '',
           address: business.address || '',
           city: business.city || '',
           postcode: business.postcode || '',
           websiteUrl: business.website_url || '',
           logoUrl: business.logo_url || '',
+          heroImageUrl: business.hero_image_url || '',
           coverImageUrl: business.cover_image_url || '',
-          primaryColor: business.primary_color || '#dbf72c',
-          secondaryColor: business.secondary_color || '#000000'
+          primaryColor: business.primary_color || '#BF360C',
+          secondaryColor: business.secondary_color || '#000000',
+          containerBackgroundColor: business.container_background_color || '#FF8A65',
+          cardBackgroundColor: business.card_background_color || '#FFFFFF'
         });
         
         setSocialLinks(business.socialLinks || []);
@@ -170,6 +190,25 @@ export default function EditBusinessPage() {
             close: h.close_time || '',
             closed: h.is_closed === 1
           })));
+        }
+        
+        // Load Phase 2 sections
+        setCtaHeading(business.cta_heading || '');
+        setCtaButtonText(business.cta_button_text || '');
+        setCtaButtonUrl(business.cta_button_url || '');
+        setMapEmbedUrl(business.map_embed_url || '');
+        setShowCta(business.show_cta === 1);
+        setShowPolicies(business.show_policies === 1);
+        setShowMap(business.show_map === 1);
+        
+        // Load policies from JSON
+        if (business.policies) {
+          try {
+            const parsedPolicies = JSON.parse(business.policies);
+            setPolicies(parsedPolicies || []);
+          } catch (e) {
+            console.error('Error parsing policies:', e);
+          }
         }
       }
     } catch (error) {
@@ -237,7 +276,7 @@ export default function EditBusinessPage() {
     }
   };
 
-  const handleImageUpload = (field: 'logoUrl' | 'coverImageUrl', file: File) => {
+  const handleImageUpload = (field: 'logoUrl' | 'heroImageUrl' | 'coverImageUrl', file: File) => {
     const reader = new FileReader();
     reader.onloadend = () => {
       setFormData({ ...formData, [field]: reader.result as string });
@@ -293,14 +332,19 @@ export default function EditBusinessPage() {
           business_type_id: formData.businessTypeId,
           phone: formData.phone,
           email: formData.email,
+          whatsapp_number: formData.whatsappNumber,
+          messenger_url: formData.messengerUrl,
           address: formData.address,
           city: formData.city,
           postcode: formData.postcode,
           website_url: formData.websiteUrl,
           logo_url: formData.logoUrl,
+          hero_image_url: formData.heroImageUrl,
           cover_image_url: formData.coverImageUrl,
           primary_color: formData.primaryColor,
-          secondary_color: formData.secondaryColor
+          secondary_color: formData.secondaryColor,
+          container_background_color: formData.containerBackgroundColor,
+          card_background_color: formData.cardBackgroundColor
         })
       });
 
@@ -396,8 +440,25 @@ export default function EditBusinessPage() {
         });
       }
 
+      // Update Phase 2 sections
+      await fetch('/api/businesses', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: businessId,
+          cta_heading: ctaHeading,
+          cta_button_text: ctaButtonText,
+          cta_button_url: ctaButtonUrl,
+          policies: JSON.stringify(policies),
+          map_embed_url: mapEmbedUrl,
+          show_cta: showCta ? 1 : 0,
+          show_policies: showPolicies ? 1 : 0,
+          show_map: showMap ? 1 : 0
+        })
+      });
+
       alert('Business updated successfully!');
-      router.push('/dashboard');
+      router.push(user.email === 'admin@lynksportal.com' ? '/admin/dashboard' : '/dashboard');
     } catch (error: any) {
       alert(error.message);
     } finally {
@@ -423,7 +484,7 @@ export default function EditBusinessPage() {
       {/* Header */}
       <header className="border-b border-gray-800 shadow-sm" style={{ backgroundColor: '#0c0f17' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link href="/dashboard" className="inline-flex items-center space-x-2 text-white hover:text-lime-400 transition-colors">
+          <Link href={user?.email === 'admin@lynksportal.com' ? '/admin/dashboard' : '/dashboard'} className="inline-flex items-center space-x-2 text-white hover:text-lime-400 transition-colors">
             <ArrowLeft size={20} />
             <span>Back to Dashboard</span>
           </Link>
@@ -609,6 +670,49 @@ export default function EditBusinessPage() {
                 </div>
               </div>
 
+              {/* Hero Image Upload */}
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  Hero Image (Between Logo & Category)
+                </label>
+                <div className="border-2 border-dashed border-gray-700 rounded-lg p-6 text-center hover:border-lime-400 transition-colors">
+                  {formData.heroImageUrl ? (
+                    <div className="relative">
+                      <img src={formData.heroImageUrl} alt="Hero" className="w-full h-32 mx-auto rounded-lg object-cover mb-4 border-2 border-gray-700" />
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, heroImageUrl: '' })}
+                        className="text-red-500 hover:text-red-400 text-sm font-medium"
+                      >
+                        Remove Hero Image
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <Upload className="mx-auto mb-4" style={{ color: '#dbf72c' }} size={48} />
+                      <label className="cursor-pointer">
+                        <span className="text-lime-400 hover:text-lime-300 font-bold">
+                          Upload Hero Image
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleImageUpload('heroImageUrl', file);
+                          }}
+                        />
+                      </label>
+                      <p className="text-gray-400 text-sm mt-2">PNG, JPG up to 5MB</p>
+                      <p className="text-gray-500 text-xs mt-1">Recommended: Portrait or square, 600x600px</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-6 mt-6">
               {/* Cover Image Upload */}
               <div>
                 <label className="block text-sm font-medium text-white mb-2">
@@ -683,6 +787,34 @@ export default function EditBusinessPage() {
                     className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:border-transparent outline-none"
                     placeholder="info@business.com"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    WhatsApp Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.whatsappNumber}
+                    onChange={(e) => setFormData({ ...formData, whatsappNumber: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:border-transparent outline-none"
+                    placeholder="+44 1234 567890"
+                  />
+                  <p className="text-gray-400 text-sm mt-2">💡 Include country code for WhatsApp link to work properly</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Facebook Messenger URL
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.messengerUrl}
+                    onChange={(e) => setFormData({ ...formData, messengerUrl: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:border-transparent outline-none"
+                    placeholder="https://m.me/yourusername"
+                  />
+                  <p className="text-gray-400 text-sm mt-2">💡 Get your Messenger link from Facebook Page settings</p>
                 </div>
               </div>
 
@@ -902,6 +1034,183 @@ export default function EditBusinessPage() {
             </div>
           </div>
 
+          {/* Call-to-Action Section */}
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-lg p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white">Call-to-Action Button</h2>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showCta}
+                  onChange={(e) => setShowCta(e.target.checked)}
+                  className="w-5 h-5 rounded"
+                />
+                <span className="text-white">Show Section</span>
+              </label>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  Section Heading
+                </label>
+                <input
+                  type="text"
+                  value={ctaHeading}
+                  onChange={(e) => setCtaHeading(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:border-transparent outline-none"
+                  placeholder="e.g., JOIN A CLASS, BOOK NOW, GET STARTED"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  Button Text
+                </label>
+                <input
+                  type="text"
+                  value={ctaButtonText}
+                  onChange={(e) => setCtaButtonText(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:border-transparent outline-none"
+                  placeholder="e.g., BOOK NOW, Sign Up, Contact Us"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  Button URL
+                </label>
+                <input
+                  type="url"
+                  value={ctaButtonUrl}
+                  onChange={(e) => setCtaButtonUrl(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:border-transparent outline-none"
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Policies Section */}
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-lg p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-white">Policy Documents</h2>
+                <p className="text-gray-400 text-sm mt-1">Add links to your policies (PDFs or web pages)</p>
+              </div>
+              <div className="flex items-center space-x-4">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showPolicies}
+                    onChange={(e) => setShowPolicies(e.target.checked)}
+                    className="w-5 h-5 rounded"
+                  />
+                  <span className="text-white">Show Section</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setPolicies([...policies, { title: '', url: '' }])}
+                  className="flex items-center space-x-2 text-black px-4 py-2 rounded-lg font-bold transition-colors"
+                  style={{ backgroundColor: '#dbf72c' }}
+                >
+                  <Plus size={18} />
+                  <span>Add Policy</span>
+                </button>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              {policies.map((policy, index) => (
+                <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <input
+                    type="text"
+                    value={policy.title}
+                    onChange={(e) => {
+                      const newPolicies = [...policies];
+                      newPolicies[index].title = e.target.value;
+                      setPolicies(newPolicies);
+                    }}
+                    className="px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:border-transparent outline-none"
+                    placeholder="Policy Title (e.g., Privacy Policy)"
+                  />
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="url"
+                      value={policy.url}
+                      onChange={(e) => {
+                        const newPolicies = [...policies];
+                        newPolicies[index].url = e.target.value;
+                        setPolicies(newPolicies);
+                      }}
+                      className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:border-transparent outline-none"
+                      placeholder="https://... or /path/to/policy.pdf"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setPolicies(policies.filter((_, i) => i !== index))}
+                      className="bg-red-600 text-white p-3 rounded-lg hover:bg-red-700 transition-colors"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              
+              {policies.length === 0 && (
+                <p className="text-gray-400 text-center py-4">
+                  No policies added yet. Click "Add Policy" to get started!
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Map Integration Section */}
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-lg p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-white">Location Map</h2>
+                <p className="text-gray-400 text-sm mt-1">Embed a Google Maps location on your business card</p>
+              </div>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showMap}
+                  onChange={(e) => setShowMap(e.target.checked)}
+                  className="w-5 h-5 rounded"
+                />
+                <span className="text-white">Show Map</span>
+              </label>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  Google Maps Embed URL or iframe HTML
+                </label>
+                <textarea
+                  value={mapEmbedUrl}
+                  onChange={(e) => {
+                    const input = e.target.value;
+                    // Extract URL from iframe if full HTML is pasted
+                    const srcMatch = input.match(/src=["']([^"']+)["']/);
+                    if (srcMatch) {
+                      setMapEmbedUrl(srcMatch[1]);
+                    } else {
+                      setMapEmbedUrl(input);
+                    }
+                  }}
+                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:border-transparent outline-none"
+                  placeholder="Paste the full iframe HTML or just the URL"
+                  rows={3}
+                />
+                <p className="text-gray-400 text-sm mt-2">
+                  💡 Go to Google Maps → Find your location → Click Share → Embed a map → Paste the entire iframe code here (or just the URL)
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Gallery Images Section */}
           <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-lg p-6">
             <div className="flex items-center justify-between mb-6">
@@ -1019,11 +1328,12 @@ export default function EditBusinessPage() {
           <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-lg p-6">
             <h2 className="text-xl font-bold text-white mb-6">Theme Colors</h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-white mb-2">
-                  Primary Color
+                  Background Color (Outside Card)
                 </label>
+                <p className="text-gray-400 text-sm mb-2">This color appears outside your business card</p>
                 <div className="flex items-center space-x-4">
                   <input
                     type="color"
@@ -1036,14 +1346,60 @@ export default function EditBusinessPage() {
                     value={formData.primaryColor}
                     onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
                     className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:border-transparent outline-none"
+                    placeholder="#FF5722"
                   />
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-white mb-2">
-                  Secondary Color
+                  Card Container Color (Middle Layer)
                 </label>
+                <p className="text-gray-400 text-sm mb-2">This color appears as the card container background (like the light orange in Isle Dance)</p>
+                <div className="flex items-center space-x-4">
+                  <input
+                    type="color"
+                    value={formData.containerBackgroundColor}
+                    onChange={(e) => setFormData({ ...formData, containerBackgroundColor: e.target.value })}
+                    className="h-12 w-20 rounded-lg border border-gray-700 cursor-pointer bg-gray-800"
+                  />
+                  <input
+                    type="text"
+                    value={formData.containerBackgroundColor}
+                    onChange={(e) => setFormData({ ...formData, containerBackgroundColor: e.target.value })}
+                    className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:border-transparent outline-none"
+                    placeholder="#FF8A65"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  Content Box Color (Inner Boxes)
+                </label>
+                <p className="text-gray-400 text-sm mb-2">This color appears inside each content section (like the white boxes in Isle Dance)</p>
+                <div className="flex items-center space-x-4">
+                  <input
+                    type="color"
+                    value={formData.cardBackgroundColor}
+                    onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
+                    className="h-12 w-20 rounded-lg border border-gray-700 cursor-pointer bg-gray-800"
+                  />
+                  <input
+                    type="text"
+                    value={formData.cardBackgroundColor}
+                    onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
+                    className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:border-transparent outline-none"
+                    placeholder="#FFFFFF"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  Accent Color
+                </label>
+                <p className="text-gray-400 text-sm mb-2">Used for buttons and highlights</p>
                 <div className="flex items-center space-x-4">
                   <input
                     type="color"
@@ -1056,6 +1412,7 @@ export default function EditBusinessPage() {
                     value={formData.secondaryColor}
                     onChange={(e) => setFormData({ ...formData, secondaryColor: e.target.value })}
                     className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:border-transparent outline-none"
+                    placeholder="#000000"
                   />
                 </div>
               </div>
