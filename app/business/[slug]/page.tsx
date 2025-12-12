@@ -46,9 +46,6 @@ interface Business {
   cta_button_text: string;
   cta_button_url: string;
   map_embed_url: string;
-  show_cta: number;
-  show_policies: number;
-  show_map: number;
   socialLinks: SocialLink[];
   customLinks: CustomLink[];
 }
@@ -318,7 +315,7 @@ export default function BusinessPage() {
           )}
 
           {/* Call-to-Action */}
-          {business.show_cta === 1 && business.cta_heading && (
+          {business.cta_heading && business.cta_button_text && business.cta_button_url && (
             <div>
               <h2 className="text-white text-2xl mb-3 text-center uppercase" style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900 }}>{business.cta_heading}</h2>
               <div className="rounded-xl p-6" style={{ backgroundColor: cardBackgroundColor }}>
@@ -338,7 +335,7 @@ export default function BusinessPage() {
           )}
 
           {/* Policies */}
-          {business.show_policies === 1 && policies.length > 0 && (
+          {policies.length > 0 && (
             <div>
               <h2 className="text-white text-2xl mb-3 text-center uppercase" style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900 }}>POLICIES</h2>
               <div className="rounded-xl p-6" style={{ backgroundColor: cardBackgroundColor }}>
@@ -410,7 +407,7 @@ export default function BusinessPage() {
           )}
 
           {/* Map Section */}
-          {business.show_map === 1 && (business.map_embed_url || business.address) && (
+          {(business.map_embed_url || business.address) && (
             <div>
               <h2 className="text-white text-2xl mb-3 text-center uppercase" style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900 }}>OUR LOCATION</h2>
               <div className="rounded-xl p-6" style={{ backgroundColor: cardBackgroundColor }}>
