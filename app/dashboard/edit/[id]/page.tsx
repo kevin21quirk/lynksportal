@@ -184,11 +184,13 @@ export default function EditBusinessPage() {
         const hoursResponse = await fetch(`/api/business-hours?businessId=${businessId}`);
         const hoursData = await hoursResponse.json();
         if (hoursData.length > 0) {
+          // Map day numbers back to day names
+          const dayNames = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
           setBusinessHours(hoursData.map((h: any) => ({
-            day: h.day_of_week,
+            day: dayNames[h.day_of_week] || h.day_of_week,
             open: h.open_time || '',
             close: h.close_time || '',
-            closed: h.is_closed === 1
+            closed: h.is_closed
           })));
         }
         
@@ -426,13 +428,24 @@ export default function EditBusinessPage() {
         method: 'DELETE'
       });
 
+      // Map day names to numbers (1=Monday, 7=Sunday)
+      const dayMap: { [key: string]: number } = {
+        'Monday': 1,
+        'Tuesday': 2,
+        'Wednesday': 3,
+        'Thursday': 4,
+        'Friday': 5,
+        'Saturday': 6,
+        'Sunday': 7
+      };
+
       for (const hours of businessHours) {
         await fetch('/api/business-hours', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             businessId: parseInt(businessId),
-            dayOfWeek: hours.day,
+            dayOfWeek: dayMap[hours.day],
             openTime: hours.closed ? null : hours.open,
             closeTime: hours.closed ? null : hours.close,
             isClosed: hours.closed

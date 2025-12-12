@@ -456,14 +456,18 @@ export default function BusinessPage() {
               <h2 className="text-white text-2xl mb-3 text-center uppercase" style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900 }}>CONTACTABLE HOURS</h2>
               <div className="rounded-xl p-6" style={{ backgroundColor: cardBackgroundColor }}>
                 <div className="space-y-3">
-                  {businessHours.map((hours, index) => (
-                    <div key={index} className="flex justify-between">
-                      <span className="text-gray-900 font-bold">{hours.day_of_week}:</span>
-                      <span className="text-gray-900">
-                        {hours.is_closed ? 'Closed' : `${hours.open_time} - ${hours.close_time}`}
-                      </span>
-                    </div>
-                  ))}
+                  {businessHours.map((hours, index) => {
+                    const dayNames = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                    const dayName = typeof hours.day_of_week === 'number' ? dayNames[hours.day_of_week] : hours.day_of_week;
+                    return (
+                      <div key={index} className="flex justify-between">
+                        <span className="text-gray-900 font-bold">{dayName}:</span>
+                        <span className="text-gray-900">
+                          {hours.is_closed ? 'Closed' : `${hours.open_time} - ${hours.close_time}`}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
