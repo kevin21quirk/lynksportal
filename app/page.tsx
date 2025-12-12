@@ -62,8 +62,9 @@ export default function Home() {
       const businessesData = await businessesRes.json();
       const categoriesData = await categoriesRes.json();
 
-      setBusinesses(businessesData);
-      setCategories(categoriesData);
+      // Ensure we have arrays, not error objects
+      setBusinesses(Array.isArray(businessesData) ? businessesData : []);
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {

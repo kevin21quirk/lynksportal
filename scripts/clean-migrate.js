@@ -24,19 +24,36 @@ const pool = new Pool({
 
 const sqliteDb = new Database(path.join(__dirname, '..', 'lynks-portal.db'));
 
-async function migrateToPostgres() {
+async function cleanAndMigrate() {
   const client = await pool.connect();
   
   try {
-    console.log('Starting migration to Postgres...');
+    console.log('Starting clean migration to Postgres...');
     console.log('Connected to:', process.env.DATABASE_URL?.split('@')[1]?.split('?')[0]);
     
-    await client.query('BEGIN');
-    console.log('Transaction started');
-
-    // Create users table
+    // Drop all existing tables
+    console.log('\nDropping existing tables...');
     await client.query(`
-      CREATE TABLE IF NOT EXISTS users (
+      DROP TABLE IF EXISTS gallery_images CASCADE;
+      DROP TABLE IF EXISTS opening_hours CASCADE;
+      DROP TABLE IF EXISTS custom_links CASCADE;
+      DROP TABLE IF EXISTS social_links CASCADE;
+      DROP TABLE IF EXISTS business_analytics CASCADE;
+      DROP TABLE IF EXISTS platform_analytics CASCADE;
+      DROP TABLE IF EXISTS analytics_events CASCADE;
+      DROP TABLE IF EXISTS businesses CASCADE;
+      DROP TABLE IF EXISTS business_types CASCADE;
+      DROP TABLE IF EXISTS categories CASCADE;
+      DROP TABLE IF EXISTS users CASCADE;
+    `);
+    console.log('✓ Dropped all existing tables');
+    
+    // Now run the migration
+    await client.query('BEGIN');
+    
+    // Create all tables (same as before)
+    await client.query(`
+      CREATE TABLE users (
         id SERIAL PRIMARY KEY,
         email TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
@@ -50,9 +67,8 @@ async function migrateToPostgres() {
     `);
     console.log('✓ Created users table');
 
-    // Create categories table
     await client.query(`
-      CREATE TABLE IF NOT EXISTS categories (
+      CREATE TABLE categories (
         id SERIAL PRIMARY KEY,
         name TEXT UNIQUE NOT NULL,
         slug TEXT UNIQUE NOT NULL,
@@ -62,9 +78,8 @@ async function migrateToPostgres() {
     `);
     console.log('✓ Created categories table');
 
-    // Create business_types table
     await client.query(`
-      CREATE TABLE IF NOT EXISTS business_types (
+      CREATE TABLE business_types (
         id SERIAL PRIMARY KEY,
         name TEXT UNIQUE NOT NULL,
         slug TEXT UNIQUE NOT NULL,
@@ -74,9 +89,8 @@ async function migrateToPostgres() {
     `);
     console.log('✓ Created business_types table');
 
-    // Create businesses table with ALL fields including new ones
     await client.query(`
-      CREATE TABLE IF NOT EXISTS businesses (
+      CREATE TABLE businesses (
         id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         business_name TEXT NOT NULL,
@@ -113,11 +127,10 @@ async function migrateToPostgres() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
-    console.log('✓ Created businesses table with all enhanced fields');
+    console.log('✓ Created businesses table');
 
-    // Create social_links table
     await client.query(`
-      CREATE TABLE IF NOT EXISTS social_links (
+      CREATE TABLE social_links (
         id SERIAL PRIMARY KEY,
         business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
         platform TEXT NOT NULL,
@@ -129,9 +142,8 @@ async function migrateToPostgres() {
     `);
     console.log('✓ Created social_links table');
 
-    // Create custom_links table
     await client.query(`
-      CREATE TABLE IF NOT EXISTS custom_links (
+      CREATE TABLE custom_links (
         id SERIAL PRIMARY KEY,
         business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
         title TEXT NOT NULL,
@@ -144,9 +156,8 @@ async function migrateToPostgres() {
     `);
     console.log('✓ Created custom_links table');
 
-    // Create opening_hours table
     await client.query(`
-      CREATE TABLE IF NOT EXISTS opening_hours (
+      CREATE TABLE opening_hours (
         id SERIAL PRIMARY KEY,
         business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
         day_of_week INTEGER NOT NULL,
@@ -157,9 +168,8 @@ async function migrateToPostgres() {
     `);
     console.log('✓ Created opening_hours table');
 
-    // Create gallery_images table
     await client.query(`
-      CREATE TABLE IF NOT EXISTS gallery_images (
+      CREATE TABLE gallery_images (
         id SERIAL PRIMARY KEY,
         business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
         image_url TEXT NOT NULL,
@@ -169,9 +179,8 @@ async function migrateToPostgres() {
     `);
     console.log('✓ Created gallery_images table');
 
-    // Create analytics_events table
     await client.query(`
-      CREATE TABLE IF NOT EXISTS analytics_events (
+      CREATE TABLE analytics_events (
         id TEXT PRIMARY KEY,
         event TEXT NOT NULL,
         session_id TEXT NOT NULL,
@@ -197,19 +206,17 @@ async function migrateToPostgres() {
     `);
     console.log('✓ Created analytics_events table');
 
-    // Create indexes for analytics
     await client.query(`
-      CREATE INDEX IF NOT EXISTS idx_events_session ON analytics_events(session_id);
-      CREATE INDEX IF NOT EXISTS idx_events_user ON analytics_events(user_id);
-      CREATE INDEX IF NOT EXISTS idx_events_event ON analytics_events(event);
-      CREATE INDEX IF NOT EXISTS idx_events_timestamp ON analytics_events(timestamp);
-      CREATE INDEX IF NOT EXISTS idx_events_pathname ON analytics_events(pathname);
+      CREATE INDEX idx_events_session ON analytics_events(session_id);
+      CREATE INDEX idx_events_user ON analytics_events(user_id);
+      CREATE INDEX idx_events_event ON analytics_events(event);
+      CREATE INDEX idx_events_timestamp ON analytics_events(timestamp);
+      CREATE INDEX idx_events_pathname ON analytics_events(pathname);
     `);
     console.log('✓ Created analytics indexes');
 
-    // Create business_analytics table
     await client.query(`
-      CREATE TABLE IF NOT EXISTS business_analytics (
+      CREATE TABLE business_analytics (
         id SERIAL PRIMARY KEY,
         business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
         date DATE NOT NULL,
@@ -232,9 +239,8 @@ async function migrateToPostgres() {
     `);
     console.log('✓ Created business_analytics table');
 
-    // Create platform_analytics table
     await client.query(`
-      CREATE TABLE IF NOT EXISTS platform_analytics (
+      CREATE TABLE platform_analytics (
         id SERIAL PRIMARY KEY,
         date DATE NOT NULL UNIQUE,
         total_visitors INTEGER DEFAULT 0,
@@ -253,46 +259,39 @@ async function migrateToPostgres() {
     `);
     console.log('✓ Created platform_analytics table');
 
-    // Migrate data from SQLite to Postgres
+    // Migrate data
     console.log('\nMigrating data from SQLite...');
 
-    // Migrate users
     const users = sqliteDb.prepare('SELECT * FROM users').all();
     for (const user of users) {
       await client.query(
         `INSERT INTO users (id, email, password, full_name, created_at, subscription_status, subscription_plan, subscription_start, subscription_end)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-         ON CONFLICT (email) DO NOTHING`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
         [user.id, user.email, user.password, user.full_name, user.created_at, user.subscription_status, user.subscription_plan, user.subscription_start, user.subscription_end]
       );
     }
     console.log(`✓ Migrated ${users.length} users`);
 
-    // Migrate categories
     const categories = sqliteDb.prepare('SELECT * FROM categories').all();
     for (const cat of categories) {
       await client.query(
         `INSERT INTO categories (id, name, slug, icon, created_at)
-         VALUES ($1, $2, $3, $4, $5)
-         ON CONFLICT (slug) DO NOTHING`,
+         VALUES ($1, $2, $3, $4, $5)`,
         [cat.id, cat.name, cat.slug, cat.icon, cat.created_at]
       );
     }
     console.log(`✓ Migrated ${categories.length} categories`);
 
-    // Migrate business_types
     const businessTypes = sqliteDb.prepare('SELECT * FROM business_types').all();
     for (const type of businessTypes) {
       await client.query(
         `INSERT INTO business_types (id, name, slug, category_id, created_at)
-         VALUES ($1, $2, $3, $4, $5)
-         ON CONFLICT (slug) DO NOTHING`,
+         VALUES ($1, $2, $3, $4, $5)`,
         [type.id, type.name, type.slug, type.category_id, type.created_at]
       );
     }
     console.log(`✓ Migrated ${businessTypes.length} business types`);
 
-    // Migrate businesses
     const businesses = sqliteDb.prepare('SELECT * FROM businesses').all();
     for (const biz of businesses) {
       await client.query(
@@ -302,8 +301,7 @@ async function migrateToPostgres() {
           address, city, postcode, country, website_url, template_style, primary_color,
           secondary_color, container_background_color, card_background_color, hero_image_url,
           services, cta_text, cta_url, policies, map_embed_url, is_published, created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34)
-        ON CONFLICT (slug) DO NOTHING`,
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34)`,
         [
           biz.id, biz.user_id, biz.business_name, biz.slug, biz.tagline, biz.description,
           biz.logo_url, biz.cover_image_url, biz.category_id, biz.business_type_id, biz.portal,
@@ -317,89 +315,19 @@ async function migrateToPostgres() {
     }
     console.log(`✓ Migrated ${businesses.length} businesses`);
 
-    // Migrate social_links (only for businesses that exist)
-    const socialLinks = sqliteDb.prepare('SELECT * FROM social_links').all();
-    let migratedSocialLinks = 0;
-    for (const link of socialLinks) {
-      try {
-        await client.query(
-          `INSERT INTO social_links (id, business_id, platform, url, display_order, is_visible, created_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-          [link.id, link.business_id, link.platform, link.url, link.display_order, link.is_visible, link.created_at]
-        );
-        migratedSocialLinks++;
-      } catch (e) {
-        // Skip links for non-existent businesses
-        console.log(`  Skipped social link for business_id ${link.business_id} (business doesn't exist)`);
-      }
-    }
-    console.log(`✓ Migrated ${migratedSocialLinks} social links`);
-
-    // Migrate opening_hours (only for businesses that exist)
-    const openingHours = sqliteDb.prepare('SELECT * FROM opening_hours').all();
-    let migratedOpeningHours = 0;
-    for (const hours of openingHours) {
-      try {
-        await client.query(
-          `INSERT INTO opening_hours (id, business_id, day_of_week, open_time, close_time, is_closed)
-           VALUES ($1, $2, $3, $4, $5, $6)`,
-          [hours.id, hours.business_id, hours.day_of_week, hours.open_time, hours.close_time, hours.is_closed]
-        );
-        migratedOpeningHours++;
-      } catch (e) {
-        console.log(`  Skipped opening hours for business_id ${hours.business_id}`);
-      }
-    }
-    console.log(`✓ Migrated ${migratedOpeningHours} opening hours`);
-
-    // Check if gallery_images table exists in SQLite
-    try {
-      const galleryImages = sqliteDb.prepare('SELECT * FROM gallery_images').all();
-      let migratedGalleryImages = 0;
-      for (const img of galleryImages) {
-        try {
-          await client.query(
-            `INSERT INTO gallery_images (id, business_id, image_url, display_order, created_at)
-             VALUES ($1, $2, $3, $4, $5)`,
-            [img.id, img.business_id, img.image_url, img.display_order, img.created_at]
-          );
-          migratedGalleryImages++;
-        } catch (e) {
-          console.log(`  Skipped gallery image for business_id ${img.business_id}`);
-        }
-      }
-      console.log(`✓ Migrated ${migratedGalleryImages} gallery images`);
-    } catch (e) {
-      console.log('✓ No gallery images to migrate');
-    }
-
-    // Verify tables before commit
-    const tableCheckBefore = await client.query(`
+    await client.query('COMMIT');
+    console.log('\n✅ Migration completed successfully!');
+    
+    // Verify
+    const tableCheck = await client.query(`
       SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename
     `);
-    console.log('\nTables before commit:', tableCheckBefore.rows.length);
-
-    await client.query('COMMIT');
-    console.log('Transaction committed');
-
-    // Verify tables after commit (using a new connection)
-    const verifyClient = await pool.connect();
-    try {
-      const tableCheckAfter = await verifyClient.query(`
-        SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename
-      `);
-      console.log('\nTables after commit:', tableCheckAfter.rows.length);
-      tableCheckAfter.rows.forEach(row => console.log('  -', row.tablename));
-
-      // Check business count
-      const bizCount = await verifyClient.query('SELECT COUNT(*) FROM businesses');
-      console.log('\nBusinesses in database:', bizCount.rows[0].count);
-    } finally {
-      verifyClient.release();
-    }
-
-    console.log('\n✅ Migration completed successfully!');
-
+    console.log('\nTables created:', tableCheck.rows.length);
+    tableCheck.rows.forEach(row => console.log('  -', row.tablename));
+    
+    const bizCount = await client.query('SELECT COUNT(*) FROM businesses');
+    console.log('\nBusinesses in database:', bizCount.rows[0].count);
+    
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('❌ Migration failed:', error);
@@ -411,4 +339,4 @@ async function migrateToPostgres() {
   }
 }
 
-migrateToPostgres().catch(console.error);
+cleanAndMigrate().catch(console.error);
