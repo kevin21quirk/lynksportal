@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/database';
+import { query, queryOne } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,22 +15,22 @@ export async function GET(request: NextRequest) {
     const endDateStr = endDate.toISOString().split('T')[0];
 
     // Get platform analytics
-    const platformAnalytics = db.prepare(`
+    const platformAnalytics = await query(`
       SELECT * FROM platform_analytics
       WHERE date >= ? AND date <= ?
       ORDER BY date ASC
-    `).all(startDateStr, endDateStr) as any[];
+    `, [startDateStr, endDateStr]) as any[];
 
     // Get real-time active sessions (last 30 minutes)
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-    const activeSessions = db.prepare(`
+    const activeSessions = await queryOne(`
       SELECT COUNT(DISTINCT session_id) as count
       FROM analytics_events
       WHERE timestamp > ?
-    `).get(thirtyMinutesAgo) as any;
+    `, [thirtyMinutesAgo]) as any;
 
     // Get all events for detailed analysis
-    const allEvents = db.prepare(`
+    const allEvents = await query(`
       SELECT 
         event,
         session_id,
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
         timestamp
       FROM analytics_events
       WHERE DATE(timestamp) >= ? AND DATE(timestamp) <= ?
-    `).all(startDateStr, endDateStr) as any[];
+    `, [startDateStr, endDateStr]) as any[];
 
     // Calculate summary metrics
     const totalVisitors = allEvents.length;
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
         .sort(([, a], [, b]) => b - a)
         .slice(0, 10)
         .map(async ([slug, views]) => {
-          const business = db.prepare('SELECT id, business_name, slug FROM businesses WHERE slug = ?').get(slug) as any;
+          const business = await queryOne('SELECT id, business_name, slug FROM businesses WHERE slug = ?', [slug]) as any;
           return {
             id: business?.id,
             name: business?.business_name || slug,
@@ -77,8 +77,8 @@ export async function GET(request: NextRequest) {
 
     // Top categories
     const categoryViews: Record<string, number> = {};
-    const businesses = db.prepare('SELECT slug, category_id FROM businesses').all() as any[];
-    const categories = db.prepare('SELECT id, name FROM categories').all() as any[];
+    const businesses = await query('SELECT slug, category_id FROM businesses') as any[];
+    const categories = await query('SELECT id, name FROM categories') as any[];
     
     const categoryMap = new Map(categories.map((c: any) => [c.id, c.name]));
     const businessCategoryMap = new Map(businesses.map((b: any) => [b.slug, b.category_id]));

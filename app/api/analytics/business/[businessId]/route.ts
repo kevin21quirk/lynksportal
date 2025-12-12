@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/database';
+import { query, queryOne } from '@/lib/db';
 
 export async function GET(
   request: NextRequest,
@@ -11,7 +11,7 @@ export async function GET(
     const days = parseInt(searchParams.get('days') || '30');
 
     // Verify business exists
-    const business = db.prepare('SELECT * FROM businesses WHERE id = ?').get(businessId) as any;
+    const business = await queryOne('SELECT * FROM businesses WHERE id = ?', [businessId]) as any;
     if (!business) {
       return NextResponse.json({ error: 'Business not found' }, { status: 404 });
     }
@@ -25,17 +25,17 @@ export async function GET(
     const endDateStr = endDate.toISOString().split('T')[0];
 
     // Get aggregated analytics
-    const analytics = db.prepare(`
+    const analytics = await query(`
       SELECT * FROM business_analytics
       WHERE business_id = ?
         AND date >= ?
         AND date <= ?
       ORDER BY date ASC
-    `).all(businessId, startDateStr, endDateStr) as any[];
+    `, [businessId, startDateStr, endDateStr]) as any[];
 
     // Get raw events for detailed analysis
     const businessSlug = business.slug;
-    const events = db.prepare(`
+    const events = await query(`
       SELECT 
         event,
         session_id,
@@ -52,7 +52,7 @@ export async function GET(
         AND DATE(timestamp) <= ?
       ORDER BY timestamp DESC
       LIMIT 1000
-    `).all(`/business/${businessSlug}%`, startDateStr, endDateStr) as any[];
+    `, [`/business/${businessSlug}%`, startDateStr, endDateStr]) as any[];
 
     // Calculate summary metrics
     const totalViews = analytics.reduce((sum, a) => sum + a.views, 0);

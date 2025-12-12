@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/database';
+import { query, queryOne, execute } from '@/lib/db';
 import { randomUUID } from 'crypto';
 
 // IP Geolocation helper (using ip-api.com free tier)
@@ -62,7 +62,7 @@ async function aggregateBusinessAnalytics(businessId: number, date: string) {
     const businessSlugPattern = `/business/%`;
     
     // Get all events for this business on this date
-    const events = db.prepare(`
+    const events = await query(`
       SELECT 
         event,
         session_id,
@@ -73,7 +73,7 @@ async function aggregateBusinessAnalytics(businessId: number, date: string) {
       FROM analytics_events
       WHERE pathname LIKE ?
         AND DATE(timestamp) = ?
-    `).all(businessSlugPattern, date) as any[];
+    `, [businessSlugPattern, date]) as any[];
 
     if (events.length === 0) return;
 
@@ -134,7 +134,7 @@ async function aggregateBusinessAnalytics(businessId: number, date: string) {
     });
 
     // Upsert aggregated data
-    db.prepare(`
+    await execute(`
       INSERT INTO business_analytics (
         business_id, date, views, unique_visitors, calls, emails, whatsapp,
         website_clicks, avg_time_on_page, total_time_on_page, scroll_depth_avg,
@@ -154,7 +154,7 @@ async function aggregateBusinessAnalytics(businessId: number, date: string) {
         device_breakdown = excluded.device_breakdown,
         region_breakdown = excluded.region_breakdown,
         updated_at = CURRENT_TIMESTAMP
-    `).run(
+    `, [
       businessId,
       date,
       views,
@@ -169,7 +169,7 @@ async function aggregateBusinessAnalytics(businessId: number, date: string) {
       JSON.stringify(hourCounts),
       JSON.stringify(deviceCounts),
       JSON.stringify(regionCounts)
-    );
+    ]);
   } catch (error) {
     console.error('Error aggregating business analytics:', error);
   }
@@ -178,7 +178,7 @@ async function aggregateBusinessAnalytics(businessId: number, date: string) {
 // Aggregate platform analytics
 async function aggregatePlatformAnalytics(date: string) {
   try {
-    const events = db.prepare(`
+    const events = await query(`
       SELECT 
         event,
         session_id,
@@ -189,7 +189,7 @@ async function aggregatePlatformAnalytics(date: string) {
         timestamp
       FROM analytics_events
       WHERE DATE(timestamp) = ?
-    `).all(date) as any[];
+    `, [date]) as any[];
 
     if (events.length === 0) return;
 
@@ -250,7 +250,7 @@ async function aggregatePlatformAnalytics(date: string) {
     });
 
     // Upsert platform analytics
-    db.prepare(`
+    await execute(`
       INSERT INTO platform_analytics (
         date, total_visitors, unique_visitors, page_views, active_sessions,
         top_businesses, device_breakdown, browser_breakdown, region_breakdown,
@@ -267,7 +267,7 @@ async function aggregatePlatformAnalytics(date: string) {
         region_breakdown = excluded.region_breakdown,
         peak_hours = excluded.peak_hours,
         updated_at = CURRENT_TIMESTAMP
-    `).run(
+    `, [
       date,
       events.length,
       uniqueVisitors,
@@ -278,7 +278,7 @@ async function aggregatePlatformAnalytics(date: string) {
       JSON.stringify(browserCounts),
       JSON.stringify(regionCounts),
       JSON.stringify(hourCounts)
-    );
+    ]);
   } catch (error) {
     console.error('Error aggregating platform analytics:', error);
   }
@@ -329,13 +329,13 @@ export async function POST(request: NextRequest) {
     const eventId = randomUUID();
 
     // Insert event into database
-    db.prepare(`
+    await execute(`
       INSERT INTO analytics_events (
         id, event, session_id, user_id, url, pathname, referrer,
         user_agent, ip_address, region, country, city, latitude, longitude,
         device_type, browser, screen_width, screen_height, metadata, timestamp
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
+    `, [
       eventId,
       event,
       sessionId,
@@ -356,14 +356,14 @@ export async function POST(request: NextRequest) {
       deviceInfo.screenHeight || null,
       JSON.stringify(metadata),
       timestamp
-    );
+    ]);
 
     // Trigger aggregation for business pages
     if (pathname.startsWith('/business/')) {
       const slug = pathname.split('/')[2];
       if (slug) {
         // Get business ID from slug
-        const business = db.prepare('SELECT id FROM businesses WHERE slug = ?').get(slug) as any;
+        const business = await queryOne('SELECT id FROM businesses WHERE slug = ?', [slug]) as any;
         if (business) {
           const today = new Date().toISOString().split('T')[0];
           // Run aggregation asynchronously (don't wait)

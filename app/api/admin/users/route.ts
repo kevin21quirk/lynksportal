@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/database';
+import { query } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
     // Get all users
     let users;
     try {
-      users = db.prepare(`
+      users = await query(`
         SELECT 
           id,
           email,
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
           created_at
         FROM users
         ORDER BY created_at DESC
-      `).all() as any[];
+      `) as any[];
     } catch (dbError) {
       console.error('Database error fetching users:', dbError);
       return NextResponse.json([], { status: 200 }); // Return empty array if table doesn't exist
@@ -25,10 +25,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Get businesses for each user
-    const usersWithBusinesses = users.map(user => {
+    const usersWithBusinesses = await Promise.all(users.map(async user => {
       let businesses = [];
       try {
-        businesses = db.prepare(`
+        businesses = await query(`
           SELECT 
             id,
             business_name,
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
           FROM businesses
           WHERE user_id = ?
           ORDER BY created_at DESC
-        `).all(user.id) as any[];
+        `, [user.id]) as any[];
       } catch (bizError) {
         console.error(`Error fetching businesses for user ${user.id}:`, bizError);
       }
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
         ...user,
         businesses: businesses || []
       };
-    });
+    }));
 
     return NextResponse.json(usersWithBusinesses);
   } catch (error) {

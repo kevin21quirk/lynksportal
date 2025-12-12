@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/database';
+import { query } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
     // Get all businesses with their owner information
-    const businesses = db.prepare(`
+    const businesses = await query(`
       SELECT 
         b.id,
         b.business_name,
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       FROM businesses b
       LEFT JOIN users u ON b.user_id = u.id
       ORDER BY b.created_at DESC
-    `).all() as any[];
+    `) as any[];
 
     return NextResponse.json(businesses);
   } catch (error) {
