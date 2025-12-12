@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Database from 'better-sqlite3';
-import path from 'path';
-
-const db = new Database(path.join(process.cwd(), 'lynks-portal.db'));
+import { query, insert } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,20 +13,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const hours = db.prepare(`
-      SELECT * FROM business_hours 
+    const hours = await query(`
+      SELECT * FROM opening_hours 
       WHERE business_id = ? 
-      ORDER BY 
-        CASE day_of_week
-          WHEN 'Monday' THEN 1
-          WHEN 'Tuesday' THEN 2
-          WHEN 'Wednesday' THEN 3
-          WHEN 'Thursday' THEN 4
-          WHEN 'Friday' THEN 5
-          WHEN 'Saturday' THEN 6
-          WHEN 'Sunday' THEN 7
-        END
-    `).all(businessId);
+      ORDER BY day_of_week
+    `, [businessId]);
 
     return NextResponse.json(hours);
   } catch (error) {
@@ -53,15 +41,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Use INSERT OR REPLACE to handle duplicates
-    const result = db.prepare(`
-      INSERT OR REPLACE INTO business_hours (business_id, day_of_week, open_time, close_time, is_closed)
+    const hoursId = await insert(`
+      INSERT INTO opening_hours (business_id, day_of_week, open_time, close_time, is_closed)
       VALUES (?, ?, ?, ?, ?)
-    `).run(businessId, dayOfWeek, openTime, closeTime, isClosed ? 1 : 0);
+      ON CONFLICT (business_id, day_of_week) DO UPDATE SET
+        open_time = EXCLUDED.open_time,
+        close_time = EXCLUDED.close_time,
+        is_closed = EXCLUDED.is_closed
+    `, [businessId, dayOfWeek, openTime, closeTime, isClosed]);
 
     return NextResponse.json({ 
       success: true, 
-      id: result.lastInsertRowid 
+      id: hoursId 
     });
   } catch (error) {
     console.error('Create business hours error:', error);
@@ -80,10 +71,10 @@ export async function DELETE(request: NextRequest) {
 
     if (businessId) {
       // Delete all hours for a business
-      db.prepare('DELETE FROM business_hours WHERE business_id = ?').run(businessId);
+      await query('DELETE FROM opening_hours WHERE business_id = ?', [businessId]);
     } else if (id) {
       // Delete single hour entry
-      db.prepare('DELETE FROM business_hours WHERE id = ?').run(id);
+      await query('DELETE FROM opening_hours WHERE id = ?', [id]);
     } else {
       return NextResponse.json(
         { error: 'ID or Business ID required' },

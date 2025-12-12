@@ -1,21 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/database';
+import { query } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const includeTypes = searchParams.get('includeTypes') === 'true';
 
-    const categories = db.prepare('SELECT * FROM categories ORDER BY name').all();
+    const categories = await query('SELECT * FROM categories ORDER BY name');
 
     if (includeTypes) {
-      const categoriesWithTypes = categories.map((category: any) => {
-        const businessTypes = db.prepare('SELECT * FROM business_types WHERE category_id = ? ORDER BY name').all(category.id);
+      const categoriesWithTypes = await Promise.all(categories.map(async (category: any) => {
+        const businessTypes = await query('SELECT * FROM business_types WHERE category_id = ? ORDER BY name', [category.id]);
         return {
           ...category,
           businessTypes
         };
-      });
+      }));
       return NextResponse.json(categoriesWithTypes);
     }
 

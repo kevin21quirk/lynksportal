@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/database';
+import { query, queryOne, insert } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
 
     if (action === 'register') {
       // Check if user exists
-      const existingUser = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+      const existingUser = await queryOne('SELECT * FROM users WHERE email = ?', [email]);
       
       if (existingUser) {
         return NextResponse.json(
@@ -22,13 +22,12 @@ export async function POST(request: NextRequest) {
       const hashedPassword = await bcrypt.hash(password, 10);
 
       // Create user
-      const result = db.prepare(`
+      const userId = await insert(`
         INSERT INTO users (email, password, full_name)
         VALUES (?, ?, ?)
-      `).run(email, hashedPassword, fullName);
+      `, [email, hashedPassword, fullName]);
 
-      const user = db.prepare('SELECT id, email, full_name, subscription_status FROM users WHERE id = ?')
-        .get(result.lastInsertRowid);
+      const user = await queryOne('SELECT id, email, full_name, subscription_status FROM users WHERE id = ?', [userId]);
 
       return NextResponse.json({
         success: true,
@@ -38,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     if (action === 'login') {
       // Find user
-      const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email) as any;
+      const user = await queryOne('SELECT * FROM users WHERE email = ?', [email]) as any;
 
       if (!user) {
         return NextResponse.json(

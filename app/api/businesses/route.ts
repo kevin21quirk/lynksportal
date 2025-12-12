@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/database';
+import { query, queryOne, insert } from '@/lib/db';
 
 function slugify(text: string): string {
   return text
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const portal = searchParams.get('portal') || 'iom';
     const published = searchParams.get('published');
 
-    let query = `
+    let sql = `
       SELECT 
         b.*,
         c.name as category_name,
@@ -34,48 +34,48 @@ export async function GET(request: NextRequest) {
     const params: any[] = [];
 
     if (id) {
-      query += ' AND b.id = ?';
+      sql += ' AND b.id = ?';
       params.push(id);
     }
 
     if (userId) {
-      query += ' AND b.user_id = ?';
+      sql += ' AND b.user_id = ?';
       params.push(userId);
     }
 
     if (slug) {
-      query += ' AND b.slug = ?';
+      sql += ' AND b.slug = ?';
       params.push(slug);
     }
 
     if (category) {
-      query += ' AND c.slug = ?';
+      sql += ' AND c.slug = ?';
       params.push(category);
     }
 
     if (businessType) {
-      query += ' AND bt.slug = ?';
+      sql += ' AND bt.slug = ?';
       params.push(businessType);
     }
 
     if (portal) {
-      query += ' AND b.portal = ?';
+      sql += ' AND b.portal = ?';
       params.push(portal);
     }
 
     if (published === 'true') {
-      query += ' AND b.is_published = 1';
+      sql += ' AND b.is_published = true';
     }
 
-    query += ' ORDER BY b.created_at DESC';
+    sql += ' ORDER BY b.created_at DESC';
 
-    const businesses = db.prepare(query).all(...params);
+    const businesses = await query(sql, params);
 
     // Get social links for each business
-    const businessesWithLinks = businesses.map((business: any) => {
-      const socialLinks = db.prepare('SELECT * FROM social_links WHERE business_id = ? ORDER BY display_order').all(business.id);
-      const customLinks = db.prepare('SELECT * FROM custom_links WHERE business_id = ? ORDER BY display_order').all(business.id);
-      const openingHours = db.prepare('SELECT * FROM opening_hours WHERE business_id = ? ORDER BY day_of_week').all(business.id);
+    const businessesWithLinks = await Promise.all(businesses.map(async (business: any) => {
+      const socialLinks = await query('SELECT * FROM social_links WHERE business_id = ? ORDER BY display_order', [business.id]);
+      const customLinks = await query('SELECT * FROM custom_links WHERE business_id = ? ORDER BY display_order', [business.id]);
+      const openingHours = await query('SELECT * FROM opening_hours WHERE business_id = ? ORDER BY day_of_week', [business.id]);
       
       return {
         ...business,
@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
         customLinks,
         openingHours
       };
-    });
+    }));
 
     return NextResponse.json(businessesWithLinks);
   } catch (error) {
@@ -123,12 +123,12 @@ export async function POST(request: NextRequest) {
     // Generate unique slug
     let slug = slugify(businessName);
     let counter = 1;
-    while (db.prepare('SELECT id FROM businesses WHERE slug = ?').get(slug)) {
+    while (await queryOne('SELECT id FROM businesses WHERE slug = ?', [slug])) {
       slug = `${slugify(businessName)}-${counter}`;
       counter++;
     }
 
-    const result = db.prepare(`
+    const businessId = await insert(`
       INSERT INTO businesses (
         user_id, business_name, slug, tagline, description,
         category_id, business_type_id, portal, phone, email,
@@ -136,15 +136,15 @@ export async function POST(request: NextRequest) {
         logo_url, cover_image_url,
         template_style, primary_color, secondary_color
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
+    `, [
       userId, businessName, slug, tagline, description,
       categoryId, businessTypeId, portal, phone, email,
       address, city, postcode, country, websiteUrl,
       logoUrl, coverImageUrl,
       templateStyle, primaryColor, secondaryColor
-    );
+    ]);
 
-    const business = db.prepare('SELECT * FROM businesses WHERE id = ?').get(result.lastInsertRowid);
+    const business = await queryOne('SELECT * FROM businesses WHERE id = ?', [businessId]);
 
     return NextResponse.json({
       success: true,
@@ -167,13 +167,13 @@ export async function PUT(request: NextRequest) {
     const fields = Object.keys(updates).map(key => `${key} = ?`).join(', ');
     const values = Object.values(updates);
 
-    db.prepare(`
+    await query(`
       UPDATE businesses 
       SET ${fields}, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(...values, id);
+    `, [...values, id]);
 
-    const business = db.prepare('SELECT * FROM businesses WHERE id = ?').get(id);
+    const business = await queryOne('SELECT * FROM businesses WHERE id = ?', [id]);
 
     return NextResponse.json({
       success: true,
@@ -200,7 +200,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    db.prepare('DELETE FROM businesses WHERE id = ?').run(id);
+    await query('DELETE FROM businesses WHERE id = ?', [id]);
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/database';
+import { query, queryOne, insert } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const links = db.prepare('SELECT * FROM social_links WHERE business_id = ? ORDER BY display_order').all(businessId);
+    const links = await query('SELECT * FROM social_links WHERE business_id = ? ORDER BY display_order', [businessId]);
     return NextResponse.json(links);
   } catch (error) {
     console.error('Get social links error:', error);
@@ -29,12 +29,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { businessId, platform, url, displayOrder = 0, isVisible = true } = body;
 
-    const result = db.prepare(`
+    const linkId = await insert(`
       INSERT INTO social_links (business_id, platform, url, display_order, is_visible)
       VALUES (?, ?, ?, ?, ?)
-    `).run(businessId, platform, url, displayOrder, isVisible ? 1 : 0);
+    `, [businessId, platform, url, displayOrder, isVisible]);
 
-    const link = db.prepare('SELECT * FROM social_links WHERE id = ?').get(result.lastInsertRowid);
+    const link = await queryOne('SELECT * FROM social_links WHERE id = ?', [linkId]);
 
     return NextResponse.json({
       success: true,
@@ -57,9 +57,9 @@ export async function PUT(request: NextRequest) {
     const fields = Object.keys(updates).map(key => `${key} = ?`).join(', ');
     const values = Object.values(updates);
 
-    db.prepare(`UPDATE social_links SET ${fields} WHERE id = ?`).run(...values, id);
+    await query(`UPDATE social_links SET ${fields} WHERE id = ?`, [...values, id]);
 
-    const link = db.prepare('SELECT * FROM social_links WHERE id = ?').get(id);
+    const link = await queryOne('SELECT * FROM social_links WHERE id = ?', [id]);
 
     return NextResponse.json({
       success: true,
@@ -82,9 +82,9 @@ export async function DELETE(request: NextRequest) {
 
     // Delete by ID or all for a business
     if (businessId) {
-      db.prepare('DELETE FROM social_links WHERE business_id = ?').run(businessId);
+      await query('DELETE FROM social_links WHERE business_id = ?', [businessId]);
     } else if (id) {
-      db.prepare('DELETE FROM social_links WHERE id = ?').run(id);
+      await query('DELETE FROM social_links WHERE id = ?', [id]);
     } else {
       return NextResponse.json(
         { error: 'Link ID or Business ID required' },

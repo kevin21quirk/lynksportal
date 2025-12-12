@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Database from 'better-sqlite3';
-import path from 'path';
-
-const db = new Database(path.join(process.cwd(), 'lynks-portal.db'));
+import { query, insert } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,11 +13,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const images = db.prepare(`
+    const images = await query(`
       SELECT * FROM gallery_images 
       WHERE business_id = ? 
       ORDER BY display_order ASC
-    `).all(businessId);
+    `, [businessId]);
 
     return NextResponse.json(images);
   } catch (error) {
@@ -44,14 +41,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = db.prepare(`
-      INSERT INTO gallery_images (business_id, image_url, caption, display_order)
-      VALUES (?, ?, ?, ?)
-    `).run(businessId, imageUrl, caption || '', displayOrder || 0);
+    const imageId = await insert(`
+      INSERT INTO gallery_images (business_id, image_url, display_order)
+      VALUES (?, ?, ?)
+    `, [businessId, imageUrl, displayOrder || 0]);
 
     return NextResponse.json({ 
       success: true, 
-      id: result.lastInsertRowid 
+      id: imageId 
     });
   } catch (error) {
     console.error('Create gallery image error:', error);
@@ -70,10 +67,10 @@ export async function DELETE(request: NextRequest) {
 
     if (businessId) {
       // Delete all images for a business
-      db.prepare('DELETE FROM gallery_images WHERE business_id = ?').run(businessId);
+      await query('DELETE FROM gallery_images WHERE business_id = ?', [businessId]);
     } else if (id) {
       // Delete single image
-      db.prepare('DELETE FROM gallery_images WHERE id = ?').run(id);
+      await query('DELETE FROM gallery_images WHERE id = ?', [id]);
     } else {
       return NextResponse.json(
         { error: 'Image ID or Business ID required' },
