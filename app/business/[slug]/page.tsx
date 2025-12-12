@@ -454,16 +454,30 @@ export default function BusinessPage() {
           {businessHours.length > 0 && (
             <div>
               <h2 className="text-white text-2xl mb-3 text-center uppercase" style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900 }}>CONTACTABLE HOURS</h2>
-              <div className="rounded-xl p-6" style={{ backgroundColor: cardBackgroundColor }}>
-                <div className="space-y-3">
+              <div className="rounded-xl p-8" style={{ backgroundColor: cardBackgroundColor }}>
+                <div className="grid grid-cols-1 gap-4">
                   {businessHours.map((hours, index) => {
                     const dayNames = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
                     const dayName = typeof hours.day_of_week === 'number' ? dayNames[hours.day_of_week] : hours.day_of_week;
+                    const isClosed = hours.is_closed;
                     return (
-                      <div key={index} className="flex justify-between">
-                        <span className="text-gray-900 font-bold">{dayName}:</span>
-                        <span className="text-gray-900">
-                          {hours.is_closed ? 'Closed' : `${hours.open_time} - ${hours.close_time}`}
+                      <div 
+                        key={index} 
+                        className="flex items-center justify-between py-3 px-4 rounded-lg border-l-4 transition-all hover:shadow-md"
+                        style={{ 
+                          backgroundColor: isClosed ? '#f3f4f6' : '#ffffff',
+                          borderLeftColor: isClosed ? '#9ca3af' : '#dbf72c',
+                          borderWidth: '0 0 0 4px'
+                        }}
+                      >
+                        <span className="text-gray-900 font-bold text-lg" style={{ minWidth: '120px' }}>
+                          {dayName}
+                        </span>
+                        <span 
+                          className="font-semibold text-lg"
+                          style={{ color: isClosed ? '#6b7280' : '#0c0f17' }}
+                        >
+                          {isClosed ? 'Closed' : `${hours.open_time} - ${hours.close_time}`}
                         </span>
                       </div>
                     );

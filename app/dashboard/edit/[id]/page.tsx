@@ -424,6 +424,7 @@ export default function EditBusinessPage() {
       }
 
       // Delete existing business hours and add new ones
+      console.log('Deleting existing business hours for businessId:', businessId);
       await fetch(`/api/business-hours?businessId=${businessId}`, {
         method: 'DELETE'
       });
@@ -439,18 +440,23 @@ export default function EditBusinessPage() {
         'Sunday': 7
       };
 
+      console.log('Saving business hours:', businessHours);
       for (const hours of businessHours) {
-        await fetch('/api/business-hours', {
+        const payload = {
+          businessId: parseInt(businessId),
+          dayOfWeek: dayMap[hours.day],
+          openTime: hours.closed ? null : hours.open,
+          closeTime: hours.closed ? null : hours.close,
+          isClosed: hours.closed
+        };
+        console.log('Posting hours:', payload);
+        const response = await fetch('/api/business-hours', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            businessId: parseInt(businessId),
-            dayOfWeek: dayMap[hours.day],
-            openTime: hours.closed ? null : hours.open,
-            closeTime: hours.closed ? null : hours.close,
-            isClosed: hours.closed
-          })
+          body: JSON.stringify(payload)
         });
+        const result = await response.json();
+        console.log('Hours save result:', result);
       }
 
       // Update Phase 2 sections
