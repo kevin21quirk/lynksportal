@@ -71,21 +71,48 @@ export async function GET(request: NextRequest) {
 
     const businesses = await query(sql, params);
 
-    // Get social links for each business
-    const businessesWithLinks = await Promise.all(businesses.map(async (business: any) => {
-      const socialLinks = await query('SELECT * FROM social_links WHERE business_id = ? ORDER BY display_order', [business.id]);
-      const customLinks = await query('SELECT * FROM custom_links WHERE business_id = ? ORDER BY display_order', [business.id]);
-      const openingHours = await query('SELECT * FROM opening_hours WHERE business_id = ? ORDER BY day_of_week', [business.id]);
+    // Get all related data in bulk for better performance
+    if (businesses.length > 0) {
+      const businessIds = businesses.map((b: any) => b.id);
+      const placeholders = businessIds.map(() => '?').join(',');
       
-      return {
-        ...business,
-        socialLinks,
-        customLinks,
-        openingHours
-      };
-    }));
+      const [socialLinks, customLinks, openingHours] = await Promise.all([
+        query(`SELECT * FROM social_links WHERE business_id IN (${placeholders}) ORDER BY business_id, display_order`, businessIds),
+        query(`SELECT * FROM custom_links WHERE business_id IN (${placeholders}) ORDER BY business_id, display_order`, businessIds),
+        query(`SELECT * FROM opening_hours WHERE business_id IN (${placeholders}) ORDER BY business_id, day_of_week`, businessIds)
+      ]);
 
-    return NextResponse.json(businessesWithLinks);
+      // Group by business_id
+      const socialByBusiness = socialLinks.reduce((acc: any, link: any) => {
+        if (!acc[link.business_id]) acc[link.business_id] = [];
+        acc[link.business_id].push(link);
+        return acc;
+      }, {});
+
+      const customByBusiness = customLinks.reduce((acc: any, link: any) => {
+        if (!acc[link.business_id]) acc[link.business_id] = [];
+        acc[link.business_id].push(link);
+        return acc;
+      }, {});
+
+      const hoursByBusiness = openingHours.reduce((acc: any, hours: any) => {
+        if (!acc[hours.business_id]) acc[hours.business_id] = [];
+        acc[hours.business_id].push(hours);
+        return acc;
+      }, {});
+
+      // Attach to businesses
+      const businessesWithLinks = businesses.map((business: any) => ({
+        ...business,
+        socialLinks: socialByBusiness[business.id] || [],
+        customLinks: customByBusiness[business.id] || [],
+        openingHours: hoursByBusiness[business.id] || []
+      }));
+
+      return NextResponse.json(businessesWithLinks);
+    }
+
+    return NextResponse.json(businesses);
   } catch (error) {
     console.error('Get businesses error:', error);
     return NextResponse.json(
