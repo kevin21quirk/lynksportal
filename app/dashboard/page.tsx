@@ -15,7 +15,8 @@ import {
   LogOut,
   Globe,
   Share2,
-  BarChart3
+  BarChart3,
+  Package
 } from 'lucide-react';
 
 interface User {
@@ -167,8 +168,8 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Create New Business Button */}
-        <div className="mb-8">
+        {/* Action Buttons */}
+        <div className="mb-8 flex flex-wrap gap-4">
           <Link
             href="/dashboard/create"
             className="inline-flex items-center space-x-2 text-black px-6 py-3 rounded-lg font-bold hover:shadow-lg transition-all"
@@ -176,6 +177,14 @@ export default function DashboardPage() {
           >
             <Plus size={20} />
             <span>Create New Business Page</span>
+          </Link>
+          <Link
+            href="/dashboard/modules"
+            className="inline-flex items-center space-x-2 bg-gray-800 text-white px-6 py-3 rounded-lg font-bold hover:bg-gray-700 transition-all border-2"
+            style={{ borderColor: '#dbf72c' }}
+          >
+            <Package size={20} />
+            <span>Add-on Modules</span>
           </Link>
         </div>
 
