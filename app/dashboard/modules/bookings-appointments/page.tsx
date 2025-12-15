@@ -475,10 +475,10 @@ export default function BookingsManagementPage() {
                         <Clock size={16} />
                         <span>{service.duration_minutes} minutes</span>
                       </div>
-                      {service.price > 0 && (
+                      {service.price != null && service.price > 0 && (
                         <div className="flex items-center gap-2 text-gray-300">
                           <DollarSign size={16} />
-                          <span>£{service.price.toFixed(2)}</span>
+                          <span>£{Number(service.price).toFixed(2)}</span>
                         </div>
                       )}
                     </div>
