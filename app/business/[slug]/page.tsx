@@ -17,7 +17,10 @@ import {
   Clock,
   UtensilsCrossed,
   ImageIcon,
-  ArrowLeft
+  ArrowLeft,
+  Briefcase,
+  X,
+  DollarSign
 } from 'lucide-react';
 
 interface Business {
@@ -90,6 +93,8 @@ export default function BusinessPage() {
   const [galleryImages, setGalleryImages] = useState<{url: string, caption: string}[]>([]);
   const [businessHours, setBusinessHours] = useState<any[]>([]);
   const [policies, setPolicies] = useState<{title: string, url: string}[]>([]);
+  const [jobListings, setJobListings] = useState<any[]>([]);
+  const [showJobListings, setShowJobListings] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -171,6 +176,11 @@ export default function BusinessPage() {
             console.error('Error parsing policies:', e);
           }
         }
+
+        // Load job listings if business has recruitment module
+        const jobsResponse = await fetch(`/api/job-listings?businessId=${businessData.id}&status=active`);
+        const jobsData = await jobsResponse.json();
+        setJobListings(jobsData);
       }
     } catch (error) {
       console.error('Error loading business:', error);
@@ -579,9 +589,100 @@ export default function BusinessPage() {
             </div>
           </div>
 
+          {/* Job Listings Section */}
+          {jobListings.length > 0 && (
+            <div>
+              <h2 className="text-white text-2xl mb-3 text-center uppercase" style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900 }}>WE'RE HIRING</h2>
+              <div className="rounded-xl p-6" style={{ backgroundColor: cardBackgroundColor }}>
+                <p className="text-gray-900 text-center mb-4">
+                  Join our team! We have {jobListings.length} open position{jobListings.length !== 1 ? 's' : ''}.
+                </p>
+                <button
+                  onClick={() => setShowJobListings(true)}
+                  className="w-full py-3 px-6 rounded-lg font-bold flex items-center justify-center gap-2 transition-all hover:opacity-90"
+                  style={{ backgroundColor: '#dbf72c', color: '#0c0f17' }}
+                >
+                  <Briefcase size={20} />
+                  View Current Openings
+                </button>
+              </div>
+            </div>
+          )}
 
         </div>
       </div>
+
+      {/* Job Listings Modal */}
+      {showJobListings && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gray-900 border-b border-gray-700 p-6 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-white">Current Job Openings</h2>
+              <button
+                onClick={() => setShowJobListings(false)}
+                className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                <X size={24} className="text-white" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {jobListings.map(job => (
+                <div
+                  key={job.id}
+                  className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition-all"
+                >
+                  <div className="mb-4">
+                    <h3 className="text-2xl font-bold text-white mb-2">{job.title}</h3>
+                    <div className="flex flex-wrap gap-3 text-sm">
+                      <span className="flex items-center gap-1 text-gray-400">
+                        <Briefcase size={16} />
+                        {job.employment_type}
+                      </span>
+                      {job.location && (
+                        <span className="flex items-center gap-1 text-gray-400">
+                          <MapPin size={16} />
+                          {job.location}
+                        </span>
+                      )}
+                      {job.remote_option && (
+                        <span className="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs capitalize">
+                          {job.remote_option}
+                        </span>
+                      )}
+                      {(job.salary_min > 0 || job.salary_max > 0) && (
+                        <span className="flex items-center gap-1 text-gray-400">
+                          <DollarSign size={16} />
+                          £{job.salary_min > 0 ? job.salary_min.toLocaleString() : ''}
+                          {job.salary_max > 0 && ` - £${job.salary_max.toLocaleString()}`}
+                          {job.salary_period && ` / ${job.salary_period}`}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <p className="text-gray-300 mb-4 whitespace-pre-line">{job.description}</p>
+
+                  <div className="flex gap-3">
+                    <a
+                      href={`mailto:${business.email}?subject=Application for ${job.title}`}
+                      className="px-6 py-3 rounded-lg font-bold transition-all hover:opacity-90"
+                      style={{ backgroundColor: '#dbf72c', color: '#0c0f17' }}
+                    >
+                      Apply Now
+                    </a>
+                    {job.application_deadline && (
+                      <span className="px-4 py-3 text-sm text-gray-400">
+                        Apply by {new Date(job.application_deadline).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* LYNKS Footer - Full Width */}
       <div className="w-full py-12" style={{ backgroundColor: '#DDF73D' }}>
