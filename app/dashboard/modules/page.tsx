@@ -232,7 +232,7 @@ export default function ModulesPage() {
                         Cancel
                       </button>
                     </div>
-                    <div className="text-gray-400 text-sm space-y-1">
+                    <div className="text-gray-400 text-sm space-y-1 mb-4">
                       <p>Billing: {sub.billing_cycle === 'yearly' ? 'Yearly' : 'Monthly'}</p>
                       <p>
                         {sub.status === 'trial' && sub.trial_ends_at
@@ -245,6 +245,13 @@ export default function ModulesPage() {
                         /{sub.billing_cycle === 'yearly' ? 'year' : 'month'}
                       </p>
                     </div>
+                    <button
+                      onClick={() => router.push(`/dashboard/modules/${sub.module_slug}`)}
+                      className="w-full py-3 px-6 rounded-lg font-semibold transition-all"
+                      style={{ backgroundColor: '#dbf72c', color: '#0c0f17' }}
+                    >
+                      Manage Module
+                    </button>
                   </div>
                 ))}
             </div>
