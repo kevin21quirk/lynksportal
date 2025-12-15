@@ -164,18 +164,6 @@ export default function BookingsManagementPage() {
   const loadBookings = async (bId: number) => {
     const res = await fetch(`/api/bookings?businessId=${bId}`);
     const data = await res.json();
-    console.log('Raw bookings data from API:', data);
-    console.log('Number of bookings:', data.length);
-    
-    // Check for duplicates
-    const ids = data.map((b: any) => b.id);
-    const uniqueIds = new Set(ids);
-    if (ids.length !== uniqueIds.size) {
-      console.warn('⚠️ Duplicate booking IDs detected in API response!');
-      console.log('All IDs:', ids);
-      console.log('Unique IDs:', Array.from(uniqueIds));
-    }
-    
     setBookings(data);
   };
 
@@ -451,7 +439,6 @@ export default function BookingsManagementPage() {
   // Memoize the bookings for the selected date to prevent duplicate renders
   const selectedDayBookings = useMemo(() => {
     const filtered = getBookingsForDate(selectedDate);
-    console.log('useMemo: Calculating bookings for', selectedDate.toDateString(), ':', filtered.length);
     return filtered.sort((a, b) => new Date(a.start_datetime).getTime() - new Date(b.start_datetime).getTime());
   }, [bookings, selectedDate]);
 
@@ -1069,7 +1056,7 @@ export default function BookingsManagementPage() {
                       })}
                     </h3>
                     <p className="text-gray-400 mt-1">
-                      {getBookingsForDate(selectedDate).length} booking{getBookingsForDate(selectedDate).length !== 1 ? 's' : ''} scheduled
+                      {selectedDayBookings.length} booking{selectedDayBookings.length !== 1 ? 's' : ''} scheduled
                     </p>
                   </div>
                   <button
@@ -1093,7 +1080,6 @@ export default function BookingsManagementPage() {
                     </div>
                   ) : (
                     selectedDayBookings.map(booking => {
-                      console.log('Rendering card for booking ID:', booking.id);
                       const startTime = new Date(booking.start_datetime);
                       const endTime = new Date(booking.end_datetime);
                         
@@ -1315,106 +1301,6 @@ export default function BookingsManagementPage() {
                     </button>
                   </div>
                 </div>
-              </div>
-            )}
-
-            {/* Bookings List */}
-            {bookings.length === 0 ? (
-              <div className="bg-gray-800 rounded-xl p-12 text-center">
-                <Calendar className="w-16 h-16 mx-auto mb-4 text-gray-600" />
-                <h3 className="text-xl font-bold text-white mb-2">No bookings yet</h3>
-                <p className="text-gray-400 mb-6">Create your first booking to get started</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {bookings.map(booking => {
-                  const bookingDate = new Date(booking.start_datetime);
-                  const isUpcoming = bookingDate > new Date();
-                  
-                  return (
-                    <div
-                      key={booking.id}
-                      className="bg-gray-800 rounded-xl p-6 border border-gray-700"
-                    >
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-xl font-bold text-white">{booking.service_name}</h3>
-                            <span
-                              className="px-3 py-1 rounded-full text-xs font-semibold text-white"
-                              style={{ backgroundColor: getStatusColor(booking.status) }}
-                            >
-                              {booking.status}
-                            </span>
-                          </div>
-                          <div className="space-y-1 text-sm text-gray-400">
-                            <p className="flex items-center gap-2">
-                              <Calendar size={16} />
-                              {bookingDate.toLocaleDateString()} at {bookingDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </p>
-                            <p className="flex items-center gap-2">
-                              <Clock size={16} />
-                              {booking.duration_minutes} minutes
-                            </p>
-                            {booking.staff_name && (
-                              <p className="flex items-center gap-2">
-                                <Users size={16} />
-                                {booking.staff_name}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleDeleteBooking(booking.id)}
-                            className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
-                          >
-                            <Trash2 size={18} className="text-red-400" />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="border-t border-gray-700 pt-4">
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                          <div>
-                            <p className="text-gray-500 text-xs mb-1">Customer</p>
-                            <p className="text-white font-semibold">{booking.customer_name}</p>
-                            <p className="text-gray-400 text-sm">{booking.customer_email}</p>
-                            {booking.customer_phone && (
-                              <p className="text-gray-400 text-sm">{booking.customer_phone}</p>
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-gray-500 text-xs mb-1">Confirmation Code</p>
-                            <p className="text-white font-mono font-semibold">{booking.confirmation_code}</p>
-                          </div>
-                        </div>
-
-                        {booking.notes && (
-                          <div className="mb-4">
-                            <p className="text-gray-500 text-xs mb-1">Notes</p>
-                            <p className="text-gray-300 text-sm">{booking.notes}</p>
-                          </div>
-                        )}
-
-                        <div className="flex gap-2">
-                          <select
-                            value={booking.status}
-                            onChange={(e) => handleUpdateBookingStatus(booking.id, e.target.value)}
-                            className="px-4 py-2 rounded-lg text-white text-sm"
-                            style={{ backgroundColor: getStatusColor(booking.status) }}
-                          >
-                            <option value="pending">Pending</option>
-                            <option value="confirmed">Confirmed</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
-                            <option value="no_show">No Show</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
               </div>
             )}
           </div>
