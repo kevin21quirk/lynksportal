@@ -248,15 +248,6 @@ export default function BusinessPage() {
   return (
     <div className="min-h-screen py-8" style={{ backgroundColor }}>
       <div className="max-w-4xl mx-auto px-4">
-        {/* Back Button */}
-        <button
-          onClick={() => router.push('/')}
-          className="mb-4 flex items-center gap-2 px-6 py-3 rounded-full bg-white hover:bg-gray-100 transition-colors shadow-lg"
-        >
-          <ArrowLeft size={20} className="text-gray-900" />
-          <span className="text-gray-900 font-bold">Back to Main</span>
-        </button>
-        
         {/* Card Container - Middle Layer */}
         <div className="rounded-3xl p-8 space-y-3" style={{ backgroundColor: containerBackgroundColor }}>
           
