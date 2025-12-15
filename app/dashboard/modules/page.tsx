@@ -44,11 +44,14 @@ export default function ModulesPage() {
   const loadData = async () => {
     try {
       // Get user's businesses
-      const userId = localStorage.getItem('userId');
-      if (!userId) {
+      const userData = localStorage.getItem('user');
+      if (!userData) {
         router.push('/login');
         return;
       }
+
+      const user = JSON.parse(userData);
+      const userId = user.id;
 
       const businessesRes = await fetch(`/api/businesses?userId=${userId}`);
       const businesses = await businessesRes.json();
