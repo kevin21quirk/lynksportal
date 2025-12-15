@@ -615,67 +615,103 @@ export default function BusinessPage() {
 
       {/* Job Listings Modal */}
       {showJobListings && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-gray-900 border-b border-gray-700 p-6 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-white">Current Job Openings</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+            {/* Header with Business Logo */}
+            <div className="sticky top-0 bg-gradient-to-r from-gray-900 to-gray-800 p-8">
               <button
                 onClick={() => setShowJobListings(false)}
-                className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors"
               >
                 <X size={24} className="text-white" />
               </button>
+              
+              <div className="flex items-center gap-6">
+                {business?.logo_url && (
+                  <div className="flex-shrink-0">
+                    <img 
+                      src={business.logo_url} 
+                      alt={business.business_name}
+                      className="w-20 h-20 rounded-xl object-cover bg-white p-2"
+                    />
+                  </div>
+                )}
+                <div>
+                  <h2 className="text-3xl font-bold text-white mb-2">Join Our Team</h2>
+                  <p className="text-gray-300 text-lg">{business?.business_name}</p>
+                  <p className="text-gray-400 text-sm mt-1">{jobListings.length} open position{jobListings.length !== 1 ? 's' : ''}</p>
+                </div>
+              </div>
             </div>
             
-            <div className="p-6 space-y-6">
+            {/* Job Listings */}
+            <div className="p-8 space-y-6 overflow-y-auto max-h-[calc(90vh-200px)] bg-gray-50">
               {jobListings.map(job => (
                 <div
                   key={job.id}
-                  className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition-all"
+                  className="bg-white rounded-xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all"
                 >
-                  <div className="mb-4">
-                    <h3 className="text-2xl font-bold text-white mb-2">{job.title}</h3>
-                    <div className="flex flex-wrap gap-3 text-sm">
-                      <span className="flex items-center gap-1 text-gray-400">
+                  {/* Job Header */}
+                  <div className="mb-6">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3">{job.title}</h3>
+                    <div className="flex flex-wrap gap-3">
+                      <span className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg font-medium text-sm">
                         <Briefcase size={16} />
                         {job.employment_type}
                       </span>
                       {job.location && (
-                        <span className="flex items-center gap-1 text-gray-400">
+                        <span className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-lg font-medium text-sm">
                           <MapPin size={16} />
                           {job.location}
                         </span>
                       )}
                       {job.remote_option && (
-                        <span className="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs capitalize">
+                        <span className="inline-flex items-center px-4 py-2 bg-purple-50 text-purple-700 rounded-lg font-medium text-sm capitalize">
                           {job.remote_option}
-                        </span>
-                      )}
-                      {(job.salary_min > 0 || job.salary_max > 0) && (
-                        <span className="flex items-center gap-1 text-gray-400">
-                          <DollarSign size={16} />
-                          £{job.salary_min > 0 ? job.salary_min.toLocaleString() : ''}
-                          {job.salary_max > 0 && ` - £${job.salary_max.toLocaleString()}`}
-                          {job.salary_period && ` / ${job.salary_period}`}
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <p className="text-gray-300 mb-4 whitespace-pre-line">{job.description}</p>
+                  {/* Salary Info */}
+                  {(job.salary_min > 0 || job.salary_max > 0) && (
+                    <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex items-center gap-2 text-gray-900 font-semibold">
+                        <DollarSign size={20} className="text-green-600" />
+                        <span className="text-lg">
+                          £{job.salary_min > 0 ? job.salary_min.toLocaleString() : ''}
+                          {job.salary_max > 0 && ` - £${job.salary_max.toLocaleString()}`}
+                          {job.salary_period && <span className="text-gray-600 font-normal text-base"> / {job.salary_period}</span>}
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
-                  <div className="flex gap-3">
+                  {/* Job Description */}
+                  <div className="mb-6">
+                    <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">About This Role</h4>
+                    <p className="text-gray-700 leading-relaxed whitespace-pre-line">{job.description}</p>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-wrap items-center gap-4 pt-6 border-t border-gray-200">
                     <a
-                      href={`mailto:${business.email}?subject=Application for ${job.title}`}
-                      className="px-6 py-3 rounded-lg font-bold transition-all hover:opacity-90"
+                      href={`mailto:${business?.email}?subject=Application for ${job.title}`}
+                      className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-lg transition-all hover:scale-105 shadow-lg hover:shadow-xl"
                       style={{ backgroundColor: '#dbf72c', color: '#0c0f17' }}
                     >
+                      <Mail size={20} />
                       Apply Now
                     </a>
                     {job.application_deadline && (
-                      <span className="px-4 py-3 text-sm text-gray-400">
-                        Apply by {new Date(job.application_deadline).toLocaleDateString()}
-                      </span>
+                      <div className="flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-700 rounded-lg text-sm font-medium">
+                        <Clock size={16} />
+                        Apply by {new Date(job.application_deadline).toLocaleDateString('en-GB', { 
+                          day: 'numeric', 
+                          month: 'long', 
+                          year: 'numeric' 
+                        })}
+                      </div>
                     )}
                   </div>
                 </div>
