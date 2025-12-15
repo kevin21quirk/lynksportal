@@ -400,10 +400,21 @@ export default function BookingsManagementPage() {
 
   const getBookingsForDate = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
-    return bookings.filter(booking => {
+    const filtered = bookings.filter(booking => {
       const bookingDate = new Date(booking.start_datetime).toISOString().split('T')[0];
       return bookingDate === dateStr;
     });
+    
+    // Remove duplicates by booking ID
+    const uniqueBookings = filtered.reduce((acc, current) => {
+      const exists = acc.find(item => item.id === current.id);
+      if (!exists) {
+        acc.push(current);
+      }
+      return acc;
+    }, [] as Booking[]);
+    
+    return uniqueBookings;
   };
 
   const navigateMonth = (direction: 'prev' | 'next') => {
