@@ -1085,18 +1085,21 @@ export default function BookingsManagementPage() {
                       <p className="text-gray-400">No bookings scheduled for this day</p>
                     </div>
                   ) : (
-                    getBookingsForDate(selectedDate)
-                      .sort((a, b) => new Date(a.start_datetime).getTime() - new Date(b.start_datetime).getTime())
-                      .map(booking => {
-                        const startTime = new Date(booking.start_datetime);
-                        const endTime = new Date(booking.end_datetime);
+                    <>
+                      {console.log('Rendering day view with', getBookingsForDate(selectedDate).length, 'bookings')}
+                      {getBookingsForDate(selectedDate)
+                        .sort((a, b) => new Date(a.start_datetime).getTime() - new Date(b.start_datetime).getTime())
+                        .map(booking => {
+                          console.log('Rendering booking card for ID:', booking.id, 'Service:', booking.service_name);
+                          const startTime = new Date(booking.start_datetime);
+                          const endTime = new Date(booking.end_datetime);
                         
-                        return (
-                          <div
-                            key={booking.id}
-                            className="bg-gray-900 rounded-lg p-4 border-l-4 hover:bg-gray-850 transition-all"
-                            style={{ borderLeftColor: getStatusColor(booking.status) }}
-                          >
+                          return (
+                            <div
+                              key={booking.id}
+                              className="bg-gray-900 rounded-lg p-4 border-l-4 hover:bg-gray-850 transition-all"
+                              style={{ borderLeftColor: getStatusColor(booking.status) }}
+                            >
                             <div className="flex justify-between items-start mb-3">
                               <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-2">
@@ -1173,8 +1176,9 @@ export default function BookingsManagementPage() {
                               </div>
                             </div>
                           </div>
-                        );
-                      })
+                          );
+                        })}
+                    </>
                   )}
                 </div>
               </div>
