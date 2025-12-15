@@ -615,10 +615,10 @@ export default function BusinessPage() {
 
       {/* Job Listings Modal */}
       {showJobListings && (
-        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-7xl w-full my-8 shadow-2xl">
             {/* Header */}
-            <div className="sticky top-0 bg-gradient-to-r from-gray-900 to-gray-800 p-8">
+            <div className="sticky top-0 bg-gradient-to-r from-gray-900 to-gray-800 p-8 rounded-t-2xl z-10">
               <button
                 onClick={() => setShowJobListings(false)}
                 className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors"
@@ -633,78 +633,80 @@ export default function BusinessPage() {
               </div>
             </div>
             
-            {/* Job Listings */}
-            <div className="p-8 space-y-6 overflow-y-auto max-h-[calc(90vh-200px)] bg-gray-50">
-              {jobListings.map(job => (
-                <div
-                  key={job.id}
-                  className="bg-white rounded-xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all"
-                >
-                  {/* Job Header */}
-                  <div className="mb-6">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3">{job.title}</h3>
-                    <div className="flex flex-wrap gap-3">
-                      <span className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg font-medium text-sm">
-                        <Briefcase size={16} />
-                        {job.employment_type}
-                      </span>
-                      {job.location && (
-                        <span className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-lg font-medium text-sm">
-                          <MapPin size={16} />
-                          {job.location}
+            {/* Job Listings Grid */}
+            <div className="p-8 bg-gray-50">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {jobListings.map(job => (
+                  <div
+                    key={job.id}
+                    className="bg-white rounded-xl p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-all flex flex-col"
+                  >
+                    {/* Job Header */}
+                    <div className="mb-4">
+                      <h3 className="text-xl font-bold text-gray-900 mb-3">{job.title}</h3>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg font-medium text-xs">
+                          <Briefcase size={14} />
+                          {job.employment_type}
                         </span>
-                      )}
-                      {job.remote_option && (
-                        <span className="inline-flex items-center px-4 py-2 bg-purple-50 text-purple-700 rounded-lg font-medium text-sm capitalize">
-                          {job.remote_option}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Salary Info */}
-                  {(job.salary_min > 0 || job.salary_max > 0) && (
-                    <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                      <div className="flex items-center gap-2 text-gray-900 font-semibold">
-                        <DollarSign size={20} className="text-green-600" />
-                        <span className="text-lg">
-                          £{job.salary_min > 0 ? job.salary_min.toLocaleString() : ''}
-                          {job.salary_max > 0 && ` - £${job.salary_max.toLocaleString()}`}
-                          {job.salary_period && <span className="text-gray-600 font-normal text-base"> / {job.salary_period}</span>}
-                        </span>
+                        {job.location && (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg font-medium text-xs">
+                            <MapPin size={14} />
+                            {job.location}
+                          </span>
+                        )}
+                        {job.remote_option && (
+                          <span className="inline-flex items-center px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg font-medium text-xs capitalize">
+                            {job.remote_option}
+                          </span>
+                        )}
                       </div>
                     </div>
-                  )}
 
-                  {/* Job Description */}
-                  <div className="mb-6">
-                    <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">About This Role</h4>
-                    <p className="text-gray-700 leading-relaxed whitespace-pre-line">{job.description}</p>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex flex-wrap items-center gap-4 pt-6 border-t border-gray-200">
-                    <a
-                      href={`mailto:${business?.email}?subject=Application for ${job.title}`}
-                      className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-lg transition-all hover:scale-105 shadow-lg hover:shadow-xl"
-                      style={{ backgroundColor: '#dbf72c', color: '#0c0f17' }}
-                    >
-                      <Mail size={20} />
-                      Apply Now
-                    </a>
-                    {job.application_deadline && (
-                      <div className="flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-700 rounded-lg text-sm font-medium">
-                        <Clock size={16} />
-                        Apply by {new Date(job.application_deadline).toLocaleDateString('en-GB', { 
-                          day: 'numeric', 
-                          month: 'long', 
-                          year: 'numeric' 
-                        })}
+                    {/* Salary Info */}
+                    {(job.salary_min > 0 || job.salary_max > 0) && (
+                      <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2 text-gray-900 font-semibold text-sm">
+                          <DollarSign size={18} className="text-green-600" />
+                          <span>
+                            £{job.salary_min > 0 ? job.salary_min.toLocaleString() : ''}
+                            {job.salary_max > 0 && ` - £${job.salary_max.toLocaleString()}`}
+                            {job.salary_period && <span className="text-gray-600 font-normal text-xs"> / {job.salary_period}</span>}
+                          </span>
+                        </div>
                       </div>
                     )}
+
+                    {/* Job Description */}
+                    <div className="mb-4 flex-grow">
+                      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">About This Role</h4>
+                      <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-line line-clamp-4">{job.description}</p>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-col gap-3 pt-4 border-t border-gray-200 mt-auto">
+                      <a
+                        href={`mailto:${business?.email}?subject=Application for ${job.title}`}
+                        className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-base transition-all hover:scale-105 shadow-lg hover:shadow-xl w-full"
+                        style={{ backgroundColor: '#dbf72c', color: '#0c0f17' }}
+                      >
+                        <Mail size={18} />
+                        Apply Now
+                      </a>
+                      {job.application_deadline && (
+                        <div className="flex items-center justify-center gap-2 px-3 py-2 bg-orange-50 text-orange-700 rounded-lg text-xs font-medium">
+                          <Clock size={14} />
+                          Apply by {new Date(job.application_deadline).toLocaleDateString('en-GB', { 
+                            day: 'numeric', 
+                            month: 'short', 
+                            year: 'numeric' 
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
