@@ -24,8 +24,20 @@ export async function GET(request: NextRequest) {
     }
 
     let sql = `
-      SELECT 
-        b.*,
+      SELECT DISTINCT
+        b.id,
+        b.business_id,
+        b.service_id,
+        b.staff_id,
+        b.customer_name,
+        b.customer_email,
+        b.customer_phone,
+        b.start_datetime,
+        b.end_datetime,
+        b.status,
+        b.notes,
+        b.confirmation_code,
+        b.created_at,
         bs.name as service_name,
         bs.duration_minutes,
         bs.price as service_price,
