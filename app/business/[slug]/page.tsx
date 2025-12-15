@@ -615,27 +615,28 @@ export default function BusinessPage() {
 
       {/* Job Listings Modal */}
       {showJobListings && (
-        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-7xl w-full my-8 shadow-2xl">
-            {/* Header */}
-            <div className="sticky top-0 bg-gradient-to-r from-gray-900 to-gray-800 p-8 rounded-t-2xl z-10">
-              <button
-                onClick={() => setShowJobListings(false)}
-                className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors"
-              >
-                <X size={24} className="text-white" />
-              </button>
-              
-              <div>
-                <h2 className="text-3xl font-bold text-white mb-2">Join Our Team</h2>
-                <p className="text-gray-300 text-lg">{business?.business_name}</p>
-                <p className="text-gray-400 text-sm mt-1">{jobListings.length} open position{jobListings.length !== 1 ? 's' : ''}</p>
+        <div className="fixed inset-0 bg-black bg-opacity-90 z-50 overflow-y-auto">
+          <div className="min-h-screen flex items-center justify-center p-4 py-8">
+            <div className="bg-white rounded-2xl max-w-7xl w-full shadow-2xl">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-8 rounded-t-2xl">
+                <button
+                  onClick={() => setShowJobListings(false)}
+                  className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors"
+                >
+                  <X size={24} className="text-white" />
+                </button>
+                
+                <div>
+                  <h2 className="text-3xl font-bold text-white mb-2">Join Our Team</h2>
+                  <p className="text-gray-300 text-lg">{business?.business_name}</p>
+                  <p className="text-gray-400 text-sm mt-1">{jobListings.length} open position{jobListings.length !== 1 ? 's' : ''}</p>
+                </div>
               </div>
-            </div>
-            
-            {/* Job Listings Grid */}
-            <div className="p-8 bg-gray-50">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              
+              {/* Job Listings Grid */}
+              <div className="p-8 bg-gray-50 rounded-b-2xl">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {jobListings.map(job => (
                   <div
                     key={job.id}
