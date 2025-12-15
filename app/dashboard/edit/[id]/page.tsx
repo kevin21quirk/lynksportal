@@ -104,6 +104,7 @@ export default function EditBusinessPage() {
   const [showCta, setShowCta] = useState(false);
   const [showPolicies, setShowPolicies] = useState(false);
   const [showMap, setShowMap] = useState(true);
+  const [showJobListings, setShowJobListings] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -202,6 +203,7 @@ export default function EditBusinessPage() {
         setShowCta(business.show_cta === 1);
         setShowPolicies(business.show_policies === 1);
         setShowMap(business.show_map === 1);
+        setShowJobListings(business.show_job_listings === 1);
         
         // Load policies from JSON
         if (business.policies) {
@@ -472,7 +474,8 @@ export default function EditBusinessPage() {
           map_embed_url: mapEmbedUrl,
           show_cta: showCta ? 1 : 0,
           show_policies: showPolicies ? 1 : 0,
-          show_map: showMap ? 1 : 0
+          show_map: showMap ? 1 : 0,
+          show_job_listings: showJobListings ? 1 : 0
         })
       });
 
@@ -1228,6 +1231,36 @@ export default function EditBusinessPage() {
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* Job Listings Section */}
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-lg p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-white">Job Listings</h2>
+                <p className="text-gray-400 text-sm mt-1">Display your active job openings on your business card</p>
+              </div>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showJobListings}
+                  onChange={(e) => setShowJobListings(e.target.checked)}
+                  className="w-5 h-5 rounded"
+                />
+                <span className="text-white">Show Job Listings</span>
+              </label>
+            </div>
+            
+            {showJobListings && (
+              <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                <p className="text-gray-300 text-sm mb-3">
+                  When enabled, a "WE'RE HIRING" section will appear on your business card showing all active job listings.
+                </p>
+                <p className="text-gray-400 text-sm">
+                  💡 Manage your job listings from the <Link href="/dashboard/modules/job-recruitment" className="text-blue-400 hover:text-blue-300 underline">Job Recruitment Module</Link>
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Gallery Images Section */}

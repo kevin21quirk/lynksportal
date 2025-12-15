@@ -50,6 +50,7 @@ interface Business {
   cta_button_text: string;
   cta_button_url: string;
   map_embed_url: string;
+  show_job_listings: number;
   socialLinks: SocialLink[];
   customLinks: CustomLink[];
 }
@@ -590,7 +591,7 @@ export default function BusinessPage() {
           </div>
 
           {/* Job Listings Section */}
-          {jobListings.length > 0 && (
+          {business?.show_job_listings === 1 && jobListings.length > 0 && (
             <div>
               <h2 className="text-white text-2xl mb-3 text-center uppercase" style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900 }}>WE'RE HIRING</h2>
               <div className="rounded-xl p-6" style={{ backgroundColor: cardBackgroundColor }}>
