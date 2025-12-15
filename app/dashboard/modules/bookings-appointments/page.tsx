@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Edit, Trash2, Clock, DollarSign, Users, Calendar, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -1079,20 +1079,29 @@ export default function BookingsManagementPage() {
 
                 {/* Day Schedule */}
                 <div className="space-y-3">
-                  {getBookingsForDate(selectedDate).length === 0 ? (
-                    <div className="text-center py-12">
-                      <Calendar className="w-16 h-16 mx-auto mb-4 text-gray-600" />
-                      <p className="text-gray-400">No bookings scheduled for this day</p>
-                    </div>
-                  ) : (
-                    <>
-                      {console.log('Rendering day view with', getBookingsForDate(selectedDate).length, 'bookings')}
-                      {getBookingsForDate(selectedDate)
-                        .sort((a, b) => new Date(a.start_datetime).getTime() - new Date(b.start_datetime).getTime())
-                        .map(booking => {
-                          console.log('Rendering booking card for ID:', booking.id, 'Service:', booking.service_name);
-                          const startTime = new Date(booking.start_datetime);
-                          const endTime = new Date(booking.end_datetime);
+                  {(() => {
+                    const dayBookings = getBookingsForDate(selectedDate);
+                    console.log('Day bookings for', selectedDate.toDateString(), ':', dayBookings.length, 'bookings');
+                    
+                    if (dayBookings.length === 0) {
+                      return (
+                        <div className="text-center py-12">
+                          <Calendar className="w-16 h-16 mx-auto mb-4 text-gray-600" />
+                          <p className="text-gray-400">No bookings scheduled for this day</p>
+                        </div>
+                      );
+                    }
+                    
+                    const sortedBookings = dayBookings.sort((a, b) => 
+                      new Date(a.start_datetime).getTime() - new Date(b.start_datetime).getTime()
+                    );
+                    
+                    console.log('Sorted bookings:', sortedBookings.map(b => ({ id: b.id, service: b.service_name })));
+                    
+                    return sortedBookings.map(booking => {
+                      console.log('Rendering card for booking ID:', booking.id);
+                      const startTime = new Date(booking.start_datetime);
+                      const endTime = new Date(booking.end_datetime);
                         
                           return (
                             <div
@@ -1176,10 +1185,9 @@ export default function BookingsManagementPage() {
                               </div>
                             </div>
                           </div>
-                          );
-                        })}
-                    </>
-                  )}
+                        );
+                      });
+                    })()}
                 </div>
               </div>
             )}
