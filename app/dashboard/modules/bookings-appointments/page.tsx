@@ -448,6 +448,13 @@ export default function BookingsManagementPage() {
     return date1.toDateString() === date2.toDateString();
   };
 
+  // Memoize the bookings for the selected date to prevent duplicate renders
+  const selectedDayBookings = useMemo(() => {
+    const filtered = getBookingsForDate(selectedDate);
+    console.log('useMemo: Calculating bookings for', selectedDate.toDateString(), ':', filtered.length);
+    return filtered.sort((a, b) => new Date(a.start_datetime).getTime() - new Date(b.start_datetime).getTime());
+  }, [bookings, selectedDate]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#0c0f17' }}>
@@ -1079,26 +1086,13 @@ export default function BookingsManagementPage() {
 
                 {/* Day Schedule */}
                 <div className="space-y-3">
-                  {(() => {
-                    const dayBookings = getBookingsForDate(selectedDate);
-                    console.log('Day bookings for', selectedDate.toDateString(), ':', dayBookings.length, 'bookings');
-                    
-                    if (dayBookings.length === 0) {
-                      return (
-                        <div className="text-center py-12">
-                          <Calendar className="w-16 h-16 mx-auto mb-4 text-gray-600" />
-                          <p className="text-gray-400">No bookings scheduled for this day</p>
-                        </div>
-                      );
-                    }
-                    
-                    const sortedBookings = dayBookings.sort((a, b) => 
-                      new Date(a.start_datetime).getTime() - new Date(b.start_datetime).getTime()
-                    );
-                    
-                    console.log('Sorted bookings:', sortedBookings.map(b => ({ id: b.id, service: b.service_name })));
-                    
-                    return sortedBookings.map(booking => {
+                  {selectedDayBookings.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Calendar className="w-16 h-16 mx-auto mb-4 text-gray-600" />
+                      <p className="text-gray-400">No bookings scheduled for this day</p>
+                    </div>
+                  ) : (
+                    selectedDayBookings.map(booking => {
                       console.log('Rendering card for booking ID:', booking.id);
                       const startTime = new Date(booking.start_datetime);
                       const endTime = new Date(booking.end_datetime);
@@ -1186,8 +1180,8 @@ export default function BookingsManagementPage() {
                             </div>
                           </div>
                         );
-                      });
-                    })()}
+                      })
+                  )}
                 </div>
               </div>
             )}
