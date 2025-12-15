@@ -164,6 +164,18 @@ export default function BookingsManagementPage() {
   const loadBookings = async (bId: number) => {
     const res = await fetch(`/api/bookings?businessId=${bId}`);
     const data = await res.json();
+    console.log('Raw bookings data from API:', data);
+    console.log('Number of bookings:', data.length);
+    
+    // Check for duplicates
+    const ids = data.map((b: any) => b.id);
+    const uniqueIds = new Set(ids);
+    if (ids.length !== uniqueIds.size) {
+      console.warn('⚠️ Duplicate booking IDs detected in API response!');
+      console.log('All IDs:', ids);
+      console.log('Unique IDs:', Array.from(uniqueIds));
+    }
+    
     setBookings(data);
   };
 
