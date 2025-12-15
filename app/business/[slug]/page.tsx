@@ -617,7 +617,7 @@ export default function BusinessPage() {
       {showJobListings && (
         <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
-            {/* Header with Business Logo */}
+            {/* Header */}
             <div className="sticky top-0 bg-gradient-to-r from-gray-900 to-gray-800 p-8">
               <button
                 onClick={() => setShowJobListings(false)}
@@ -626,21 +626,10 @@ export default function BusinessPage() {
                 <X size={24} className="text-white" />
               </button>
               
-              <div className="flex items-center gap-6">
-                {business?.logo_url && (
-                  <div className="flex-shrink-0">
-                    <img 
-                      src={business.logo_url} 
-                      alt={business.business_name}
-                      className="w-20 h-20 rounded-xl object-cover bg-white p-2"
-                    />
-                  </div>
-                )}
-                <div>
-                  <h2 className="text-3xl font-bold text-white mb-2">Join Our Team</h2>
-                  <p className="text-gray-300 text-lg">{business?.business_name}</p>
-                  <p className="text-gray-400 text-sm mt-1">{jobListings.length} open position{jobListings.length !== 1 ? 's' : ''}</p>
-                </div>
+              <div>
+                <h2 className="text-3xl font-bold text-white mb-2">Join Our Team</h2>
+                <p className="text-gray-300 text-lg">{business?.business_name}</p>
+                <p className="text-gray-400 text-sm mt-1">{jobListings.length} open position{jobListings.length !== 1 ? 's' : ''}</p>
               </div>
             </div>
             
