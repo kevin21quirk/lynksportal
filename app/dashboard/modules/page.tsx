@@ -91,9 +91,24 @@ export default function ModulesPage() {
     try {
       setSubscribing(moduleId);
 
-      const userId = localStorage.getItem('userId');
+      const userData = localStorage.getItem('user');
+      if (!userData) {
+        alert('Please log in again');
+        router.push('/login');
+        return;
+      }
+
+      const user = JSON.parse(userData);
+      const userId = user.id;
+
       const businessesRes = await fetch(`/api/businesses?userId=${userId}`);
       const businesses = await businessesRes.json();
+      
+      if (!businesses || businesses.length === 0) {
+        alert('No business found. Please create a business first.');
+        return;
+      }
+
       const businessId = businesses[0].id;
 
       const billingCycle = selectedBillingCycle[moduleId] || 'monthly';
