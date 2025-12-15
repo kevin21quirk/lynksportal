@@ -667,7 +667,6 @@ export default function BusinessPage() {
                     {(job.salary_min > 0 || job.salary_max > 0) && (
                       <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
                         <div className="flex items-center gap-2 text-gray-900 font-semibold text-sm">
-                          <DollarSign size={18} className="text-green-600" />
                           <span>
                             £{job.salary_min > 0 ? job.salary_min.toLocaleString() : ''}
                             {job.salary_max > 0 && ` - £${job.salary_max.toLocaleString()}`}

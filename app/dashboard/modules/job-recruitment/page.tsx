@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Edit, Trash2, Briefcase, Users, Eye, Loader2, MapPin, Clock, DollarSign } from 'lucide-react';
+import { Plus, Edit, Trash2, Briefcase, Users, Eye, Loader2, MapPin, Clock } from 'lucide-react';
 
 interface JobListing {
   id: number;
@@ -480,7 +480,6 @@ export default function RecruitmentManagementPage() {
                           )}
                           {(job.salary_min > 0 || job.salary_max > 0) && (
                             <span className="flex items-center gap-1">
-                              <DollarSign size={16} />
                               £{job.salary_min > 0 ? job.salary_min.toLocaleString() : ''}
                               {job.salary_max > 0 && ` - £${job.salary_max.toLocaleString()}`}
                               {job.salary_period && ` / ${job.salary_period}`}
