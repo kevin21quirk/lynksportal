@@ -98,10 +98,17 @@ export default function BusinessPage() {
   const [showJobListings, setShowJobListings] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    loadBusiness();
-  }, [slug]);
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      loadBusiness();
+    }
+  }, [slug, mounted]);
 
   // Keyboard navigation for lightbox
   useEffect(() => {
@@ -191,7 +198,7 @@ export default function BusinessPage() {
     }
   };
 
-  if (loading) {
+  if (!mounted || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#0c0f17' }}>
         <div className="text-center">
@@ -246,20 +253,18 @@ export default function BusinessPage() {
   };
 
   return (
-    <div className="min-h-screen py-8" style={{ backgroundColor }}>
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen" style={{ backgroundColor, paddingTop: '100px' }}>
+      <div className="mx-auto px-4" style={{ maxWidth: '800px', marginBottom: '100px' }}>
         {/* Card Container - Middle Layer */}
-        <div className="rounded-3xl p-8 space-y-3" style={{ backgroundColor: containerBackgroundColor }}>
+        <div className="rounded-3xl" style={{ backgroundColor: containerBackgroundColor, padding: '50px', display: 'flex', flexDirection: 'column', gap: '30px' }}>
           
           {/* Logo - Larger size */}
           <div className="flex justify-center mb-4">
             <img 
               src={logoUrl} 
               alt={business.business_name}
-              className="w-80 h-80 object-contain animate-logo-spin"
-              style={{
-                animation: 'logoRotate 1s ease-in-out'
-              }}
+              className="object-contain"
+              style={{ width: '400px', height: 'auto' }}
             />
           </div>
           
@@ -274,23 +279,12 @@ export default function BusinessPage() {
               />
             </div>
           )}
-          
-          <style jsx>{`
-            @keyframes logoRotate {
-              0% {
-                transform: rotateY(0deg);
-              }
-              100% {
-                transform: rotateY(360deg);
-              }
-            }
-          `}</style>
 
           {/* Category */}
           <div>
-            <h2 className="text-white text-2xl mb-3 text-center uppercase" style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900 }}>CATEGORY</h2>
-            <div className="rounded-xl p-4 text-center" style={{ backgroundColor: cardBackgroundColor }}>
-              <p className="text-gray-900 font-semibold">{business.category_name}</p>
+            <h2 className="text-white text-center uppercase" style={{ fontFamily: 'NoirPro-Regular, sans-serif', fontWeight: 'normal', fontSize: '35px', marginBottom: '10px' }}>CATEGORY</h2>
+            <div className="rounded-xl text-center" style={{ backgroundColor: cardBackgroundColor, padding: '20px' }}>
+              <p className="text-gray-900">{business.category_name}</p>
               {business.business_type_name && (
                 <p className="text-gray-600 text-sm mt-1">{business.business_type_name}</p>
               )}
@@ -300,8 +294,8 @@ export default function BusinessPage() {
           {/* Description */}
           {business.description && (
             <div>
-              <h2 className="text-white text-2xl mb-3 text-center uppercase" style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900 }}>DESCRIPTION</h2>
-              <div className="rounded-xl p-6" style={{ backgroundColor: cardBackgroundColor }}>
+              <h2 className="text-white text-center uppercase" style={{ fontFamily: 'NoirPro-Regular, sans-serif', fontWeight: 'normal', fontSize: '35px', marginBottom: '10px' }}>DESCRIPTION</h2>
+              <div className="rounded-xl" style={{ backgroundColor: cardBackgroundColor, padding: '20px' }}>
                 <p className="text-gray-900 leading-relaxed text-center">{business.description}</p>
                 {business.tagline && (
                   <p className="text-gray-600 italic mt-3 text-center">&quot;{business.tagline}&quot;</p>
@@ -313,13 +307,13 @@ export default function BusinessPage() {
           {/* Services */}
           {services.length > 0 && (
             <div>
-              <h2 className="text-white text-2xl mb-3 text-center uppercase" style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900 }}>OUR SERVICES</h2>
-              <div className="rounded-xl p-6" style={{ backgroundColor: cardBackgroundColor }}>
-                <ul className="space-y-3">
+              <h2 className="text-white text-center uppercase" style={{ fontFamily: 'NoirPro-Regular, sans-serif', fontWeight: 'normal', fontSize: '35px', marginBottom: '10px' }}>OUR SERVICES</h2>
+              <div className="rounded-xl" style={{ backgroundColor: cardBackgroundColor, padding: '20px' }}>
+                <ul className="flex flex-col items-center" style={{ gap: '2px' }}>
                   {services.map((service, index) => (
-                    <li key={index} className="flex items-center text-gray-900">
-                      <span className="mr-3 text-2xl" style={{ color: backgroundColor }}>✓</span>
-                      <span className="font-medium">{service}</span>
+                    <li key={index} className="flex items-center justify-center text-gray-900">
+                      <i className="fas fa-check mr-3" style={{ color: '#C41E3A', fontSize: '16px' }}></i>
+                      <span className="font-normal text-lg">{service}</span>
                     </li>
                   ))}
                 </ul>
@@ -327,11 +321,40 @@ export default function BusinessPage() {
             </div>
           )}
 
+          {/* Our Menus */}
+          <div>
+            <h2 className="text-white text-center uppercase" style={{ fontFamily: 'NoirPro-Regular, sans-serif', fontWeight: 'normal', fontSize: '35px', marginBottom: '10px' }}>OUR MENUS</h2>
+            <div className="rounded-xl p-6" style={{ backgroundColor: cardBackgroundColor }}>
+              <div className="flex justify-center gap-4 flex-wrap">
+                <a
+                  href="/Mrs-Yangs/Menus/25.09.15-Mrs-Yangs-A-La-Carte-Menu-A4-v2a-ICR-1.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-8 py-3 rounded-full text-white font-bold text-lg hover:opacity-90 transition-opacity flex items-center gap-2"
+                  style={{ backgroundColor: '#C41E3A' }}
+                >
+                  <i className="far fa-file text-white"></i>
+                  <span className="text-white">A LA CARTE MENU</span>
+                </a>
+                <a
+                  href="/Mrs-Yangs/Menus/25.09.10-Mrs-Yangs-Lunch-Menu-2025-A2-v1a-ICR_compressed.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-8 py-3 rounded-full text-white font-bold text-lg hover:opacity-90 transition-opacity flex items-center gap-2"
+                  style={{ backgroundColor: '#C41E3A' }}
+                >
+                  <i className="far fa-file text-white"></i>
+                  <span className="text-white">LUNCH MENU</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
           {/* Call-to-Action */}
           {business.cta_heading && business.cta_button_text && business.cta_button_url && (
             <div>
-              <h2 className="text-white text-2xl mb-3 text-center uppercase" style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900 }}>{business.cta_heading}</h2>
-              <div className="rounded-xl p-6" style={{ backgroundColor: cardBackgroundColor }}>
+              <h2 className="text-white text-center uppercase" style={{ fontFamily: 'NoirPro-Regular, sans-serif', fontWeight: 'normal', fontSize: '35px', marginBottom: '10px' }}>{business.cta_heading}</h2>
+              <div className="rounded-xl" style={{ backgroundColor: cardBackgroundColor, padding: '20px' }}>
                 <div className="text-center">
                   <a
                     href={business.cta_button_url}
@@ -350,8 +373,8 @@ export default function BusinessPage() {
           {/* Policies */}
           {policies.length > 0 && (
             <div>
-              <h2 className="text-white text-2xl mb-3 text-center uppercase" style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900 }}>POLICIES</h2>
-              <div className="rounded-xl p-6" style={{ backgroundColor: cardBackgroundColor }}>
+              <h2 className="text-white text-center uppercase" style={{ fontFamily: 'NoirPro-Regular, sans-serif', fontWeight: 'normal', fontSize: '35px', marginBottom: '10px' }}>POLICIES</h2>
+              <div className="rounded-xl" style={{ backgroundColor: cardBackgroundColor, padding: '20px' }}>
                 <div className="grid grid-cols-2 gap-4">
                   {policies.map((policy, index) => (
                     <a
@@ -398,9 +421,9 @@ export default function BusinessPage() {
           {/* Gallery Section */}
           {galleryImages.length > 0 && (
             <div>
-              <h2 className="text-white text-2xl mb-3 text-center uppercase" style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900 }}>OUR GALLERY</h2>
-              <div className="rounded-xl p-6" style={{ backgroundColor: cardBackgroundColor }}>
-                <div className="grid grid-cols-3 gap-4">
+              <h2 className="text-white text-center uppercase" style={{ fontFamily: 'NoirPro-Regular, sans-serif', fontWeight: 'normal', fontSize: '35px', marginBottom: '10px' }}>OUR GALLERY</h2>
+              <div className="rounded-xl" style={{ backgroundColor: cardBackgroundColor, padding: '20px' }}>
+                <div className="grid grid-cols-4 gap-4">
                   {galleryImages.map((img, index) => (
                     <div 
                       key={index} 
@@ -422,8 +445,8 @@ export default function BusinessPage() {
           {/* Map Section */}
           {(business.map_embed_url || business.address) && (
             <div>
-              <h2 className="text-white text-2xl mb-3 text-center uppercase" style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900 }}>OUR LOCATION</h2>
-              <div className="rounded-xl p-6" style={{ backgroundColor: cardBackgroundColor }}>
+              <h2 className="text-white text-center uppercase" style={{ fontFamily: 'NoirPro-Regular, sans-serif', fontWeight: 'normal', fontSize: '35px', marginBottom: '10px' }}>OUR LOCATION</h2>
+              <div className="rounded-xl" style={{ backgroundColor: cardBackgroundColor, padding: '20px' }}>
                 {business.map_embed_url ? (
                   <iframe
                     src={getGoogleMapsEmbedUrl(business.map_embed_url)}
@@ -444,9 +467,17 @@ export default function BusinessPage() {
                   ></iframe>
                 ) : null}
                 {business.address && (
-                  <p className="text-center text-gray-900 mt-4 font-medium">
-                    {business.address}{business.city && `, ${business.city}`}{business.postcode && ` ${business.postcode}`}
-                  </p>
+                  <div className="flex flex-col items-center">
+                    <div style={{ maxWidth: '500px' }}>
+                      <p className="text-center text-gray-900 mt-4 text-lg">
+                        {business.address}
+                      </p>
+                      <div className="mt-6 text-center">
+                        <p className="text-gray-900 font-semibold text-lg mb-2">AREAS WE SERVE</p>
+                        <p className="text-gray-900">*Douglas Only*</p>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -455,32 +486,26 @@ export default function BusinessPage() {
           {/* Business Hours */}
           {businessHours.length > 0 && (
             <div>
-              <h2 className="text-white text-2xl mb-3 text-center uppercase" style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900 }}>CONTACTABLE HOURS</h2>
-              <div className="rounded-xl p-8" style={{ backgroundColor: cardBackgroundColor }}>
-                <div className="grid grid-cols-1 gap-4">
+              <h2 className="text-white text-center uppercase" style={{ fontFamily: 'NoirPro-Regular, sans-serif', fontWeight: 'normal', fontSize: '35px', marginBottom: '10px' }}>OUR HOURS</h2>
+              <div className="rounded-xl" style={{ backgroundColor: cardBackgroundColor, padding: '20px' }}>
+                <div className="flex flex-col items-center gap-2">
                   {businessHours.map((hours, index) => {
                     const dayNames = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
                     const dayName = typeof hours.day_of_week === 'number' ? dayNames[hours.day_of_week] : hours.day_of_week;
                     const isClosed = hours.is_closed;
+                    
+                    // Format split hours for weekdays
+                    let timeDisplay = '';
+                    if (hours.day_of_week >= 1 && hours.day_of_week <= 5) {
+                      timeDisplay = '12:00pm - 2:00pm & 5:00pm - 10:00pm';
+                    } else {
+                      timeDisplay = '5:00pm - 10:00pm';
+                    }
+                    
                     return (
-                      <div 
-                        key={index} 
-                        className="flex items-center justify-between py-3 px-4 rounded-lg border-l-4 transition-all hover:shadow-md"
-                        style={{ 
-                          backgroundColor: isClosed ? '#f3f4f6' : '#ffffff',
-                          borderLeftColor: isClosed ? '#9ca3af' : '#dbf72c',
-                          borderWidth: '0 0 0 4px'
-                        }}
-                      >
-                        <span className="text-gray-900 font-bold text-lg" style={{ minWidth: '120px' }}>
-                          {dayName}
-                        </span>
-                        <span 
-                          className="font-semibold text-lg"
-                          style={{ color: isClosed ? '#6b7280' : '#0c0f17' }}
-                        >
-                          {isClosed ? 'Closed' : `${hours.open_time} - ${hours.close_time}`}
-                        </span>
+                      <div key={index} className="text-center">
+                        <p className="text-gray-900 font-semibold">{dayName}:</p>
+                        <p className="text-gray-900">{timeDisplay}</p>
                       </div>
                     );
                   })}
@@ -492,22 +517,30 @@ export default function BusinessPage() {
           {/* Social Media */}
           {business.socialLinks && business.socialLinks.length > 0 && (
             <div>
-              <h2 className="text-white text-2xl mb-3 text-center uppercase" style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900 }}>SOCIAL MEDIA</h2>
-              <div className="rounded-xl p-6" style={{ backgroundColor: cardBackgroundColor }}>
-                <div className="flex flex-col items-center space-y-3">
+              <h2 className="text-white text-center uppercase" style={{ fontFamily: 'NoirPro-Regular, sans-serif', fontWeight: 'normal', fontSize: '35px', marginBottom: '10px' }}>SOCIAL MEDIA</h2>
+              <div className="rounded-xl" style={{ backgroundColor: cardBackgroundColor, padding: '20px' }}>
+                <div className="flex justify-center gap-4 flex-wrap">
                   {business.socialLinks.map((link, index) => {
-                    const Icon = socialIcons[link.platform] || Globe;
+                    const displayName = link.platform === 'tripadvisor' ? 'TRIP ADVISOR' : link.platform.toUpperCase();
+                    
                     return (
                       <a
                         key={index}
                         href={link.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full max-w-md px-8 py-4 rounded-full flex items-center justify-center space-x-3 hover:opacity-90 transition-opacity"
-                        style={{ backgroundColor: '#000000' }}
+                        className="px-8 py-3 rounded-full flex items-center gap-2 hover:opacity-90 transition-opacity"
+                        style={{ backgroundColor: '#C41E3A' }}
                       >
-                        <Icon size={20} className="text-white" />
-                        <span className="text-white font-bold uppercase">{link.platform}</span>
+                        {link.platform === 'facebook' && <i className="fab fa-facebook-f text-white"></i>}
+                        {link.platform === 'tripadvisor' && (
+                          <img src="/tripadvisor-icon.svg" alt="TripAdvisor" className="w-5 h-5" style={{ filter: 'brightness(0) invert(1)' }} />
+                        )}
+                        {link.platform === 'dazzler' && <i className="fas fa-utensils text-white"></i>}
+                        {link.platform !== 'facebook' && link.platform !== 'tripadvisor' && link.platform !== 'dazzler' && (
+                          <i className="fas fa-globe text-white"></i>
+                        )}
+                        <span className="text-white">{displayName}</span>
                       </a>
                     );
                   })}
@@ -518,39 +551,17 @@ export default function BusinessPage() {
 
           {/* Contact Information */}
           <div>
-            <h2 className="text-white text-2xl mb-3 text-center uppercase" style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900 }}>GET IN TOUCH</h2>
+            <h2 className="text-white text-center uppercase" style={{ fontFamily: 'NoirPro-Regular, sans-serif', fontWeight: 'normal', fontSize: '35px', marginBottom: '10px' }}>GET IN TOUCH</h2>
             <div className="rounded-xl p-6" style={{ backgroundColor: cardBackgroundColor }}>
               <div className="flex flex-wrap justify-center gap-3">
                 {business.phone && (
                   <a 
                     href={`tel:${business.phone}`}
-                    className="px-8 py-3 rounded-full flex items-center justify-center space-x-2 hover:opacity-90 transition-opacity"
-                    style={{ backgroundColor: '#000000' }}
+                    className="px-8 py-3 rounded-full flex items-center gap-2 hover:opacity-90 transition-opacity"
+                    style={{ backgroundColor: '#C41E3A' }}
                   >
-                    <Phone size={18} className="text-white" />
-                    <span className="text-white font-bold text-sm">{business.phone}</span>
-                  </a>
-                )}
-                {business.email && (
-                  <a 
-                    href={`mailto:${business.email}`}
-                    className="px-8 py-3 rounded-full flex items-center justify-center space-x-2 hover:opacity-90 transition-opacity"
-                    style={{ backgroundColor: '#000000' }}
-                  >
-                    <Mail size={18} className="text-white" />
-                    <span className="text-white font-bold text-sm uppercase">{business.email}</span>
-                  </a>
-                )}
-                {business.whatsapp_number && (
-                  <a 
-                    href={`https://wa.me/${business.whatsapp_number.replace(/[^0-9]/g, '')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-8 py-3 rounded-full flex items-center justify-center space-x-2 hover:opacity-90 transition-opacity"
-                    style={{ backgroundColor: '#000000' }}
-                  >
-                    <Phone size={18} className="text-white" />
-                    <span className="text-white font-bold text-sm uppercase">WhatsApp</span>
+                    <i className="fas fa-phone text-white"></i>
+                    <span className="text-white">{business.phone}</span>
                   </a>
                 )}
                 {business.messenger_url && (
@@ -558,34 +569,34 @@ export default function BusinessPage() {
                     href={business.messenger_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-8 py-3 rounded-full flex items-center justify-center space-x-2 hover:opacity-90 transition-opacity"
-                    style={{ backgroundColor: '#000000' }}
+                    className="px-8 py-3 rounded-full flex items-center gap-2 hover:opacity-90 transition-opacity"
+                    style={{ backgroundColor: '#C41E3A' }}
                   >
-                    <Mail size={18} className="text-white" />
-                    <span className="text-white font-bold text-sm uppercase">Messenger</span>
-                  </a>
-                )}
-                {business.website_url && (
-                  <a 
-                    href={business.website_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-8 py-3 rounded-full flex items-center justify-center space-x-2 hover:opacity-90 transition-opacity"
-                    style={{ backgroundColor: '#000000' }}
-                  >
-                    <Globe size={18} className="text-white" />
-                    <span className="text-white font-bold text-sm uppercase">Website</span>
+                    <i className="fab fa-facebook-messenger text-white"></i>
+                    <span className="text-white">FB MESSENGER</span>
                   </a>
                 )}
               </div>
+              {business.email && (
+                <div className="flex justify-center mt-3">
+                  <a 
+                    href={`mailto:${business.email}`}
+                    className="px-8 py-3 rounded-full flex items-center gap-2 hover:opacity-90 transition-opacity"
+                    style={{ backgroundColor: '#C41E3A' }}
+                  >
+                    <i className="fas fa-envelope text-white"></i>
+                    <span className="text-white uppercase">{business.email}</span>
+                  </a>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Job Listings Section */}
           {business?.show_job_listings === 1 && jobListings.length > 0 && (
             <div>
-              <h2 className="text-white text-2xl mb-3 text-center uppercase" style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900 }}>WE'RE HIRING</h2>
-              <div className="rounded-xl p-6" style={{ backgroundColor: cardBackgroundColor }}>
+              <h2 className="text-white text-center uppercase" style={{ fontFamily: 'NoirPro-Regular, sans-serif', fontWeight: 'normal', fontSize: '35px', marginBottom: '10px' }}>WE'RE HIRING</h2>
+              <div className="rounded-xl" style={{ backgroundColor: cardBackgroundColor, padding: '20px' }}>
                 <p className="text-gray-900 text-center mb-4">
                   Join our team! We have {jobListings.length} open position{jobListings.length !== 1 ? 's' : ''}.
                 </p>
